@@ -1155,6 +1155,9 @@
 
 
 <h1 id="security-and-guardrails">Security and Guardrails<a class="headerlink" href="#security-and-guardrails" title="Permanent link">&para;</a></h1>
+<p><img alt="Telegram alerts from ASH" src="../assets/telegram-alerts.png" /></p>
+<figcaption style="text-align:center;font-size:12px;color:var(--md-default-fg-color--light);margin:-8px 0 24px">Real-time alerts: health checks, warnings, blocks, AI triage, and daily digest all arrive on Telegram.</figcaption>
+
 <h2 id="audit-hook">Audit hook<a class="headerlink" href="#audit-hook" title="Permanent link">&para;</a></h2>
 <p>The harness logs tool use at the boundary where actions happen. Claude Code calls a PreToolUse hook before a tool runs and a PostToolUse hook after it returns. One Python script, <code>scripts/guardrails/agent_audit_hook.py</code>, handles both events by switching on the hook type in the JSON payload.</p>
 <p>Each tool call becomes one JSONL record. The record includes a timestamp, session ID, agent ID or type, tool name, target file path when one exists, block or warning status, and a short command snippet for shell commands. That log is the forensic record. It answers who touched what, when they touched it, and whether the harness allowed it.</p>
