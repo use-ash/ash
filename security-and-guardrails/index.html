@@ -859,6 +859,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sub-agent-sandbox-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-agent sandbox limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fail-open-design" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1149,6 +1160,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sub-agent-sandbox-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-agent sandbox limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fail-open-design" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1245,6 +1267,14 @@
 <p>The Stop hook (<code>scripts/guardrails/pipeline_stop.sh</code>) runs when a Claude Code session ends. It checks the git working tree for uncommitted changes and prints reminders if pipeline gates were likely skipped.</p>
 <p>If Python files changed but no <code>py_compile</code> evidence exists in the session, it reminds to verify. If production paths changed, it reminds to review the diff. If guardrail or settings files changed, it flags the security implication.</p>
 <p>The hook is advisory. It prints reminders and exits cleanly. It never blocks session exit. The value is catching the case where a developer says "I'll commit later" and forgets that the changed code was never verified.</p>
+<h2 id="sub-agent-sandbox-limitations">Sub-agent sandbox limitations<a class="headerlink" href="#sub-agent-sandbox-limitations" title="Permanent link">&para;</a></h2>
+<p>The audit hook and sandbox only protect sessions running through Claude Code. Sub-agents launched through external wrappers (like Codex) run in their own process with their own sandbox rules. The audit hook does not fire for their tool calls.</p>
+<p>This is a real gap. The incident that led to protected file blocking in the first place came from a Codex sub-agent editing a production file without approval.</p>
+<p>The harness addresses this with three layers that work without the hook:</p>
+<p><strong>Sandbox mode.</strong> The dispatch wrapper defaults to a restricted sandbox that allows writes only inside the workspace directory. Network access is disabled unless the task needs it. The wrapper auto-detects network requirements by scanning the prompt for keywords like API calls, downloads, or package installs, and upgrades the sandbox only when needed.</p>
+<p><strong>Prompt-injected guardrails.</strong> Every sub-agent prompt starts with a mandatory safety block listing protected files, blocked system paths, and forbidden operations. The sub-agent receives these rules as the first thing it reads, before the task itself. This is a soft control (the model can choose to ignore it) but works reliably in practice because frontier models respect system-level instructions.</p>
+<p><strong>Post-run diff check.</strong> After the sub-agent finishes, the wrapper diffs the workspace against its state before the run. File changes that were not named in the original task prompt trigger an alert. This catches the case where the sub-agent decided to "help" by modifying something it was not asked to touch.</p>
+<p>None of these are as strong as the audit hook. A sub-agent running with full access and a creative interpretation of the task can still do unexpected things. The combination of restricted defaults, injected rules, and post-run verification makes that unlikely rather than impossible.</p>
 <h2 id="fail-open-design">Fail-open design<a class="headerlink" href="#fail-open-design" title="Permanent link">&para;</a></h2>
 <p>The audit system fails open on infrastructure bugs. If the hook crashes, it logs the traceback to a separate file and returns a non-blocking code unless it was a deliberate deny. Claude Code continues the tool call. That tradeoff is deliberate. A broken audit hook should not kill a session in the middle of production work. The system prefers stable operation with an error log over a dead session with perfect intentions.</p>
 
