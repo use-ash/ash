@@ -891,16 +891,16 @@
 <p>The problems showed up fast:</p>
 <ul>
 <li>Every new session started from zero. The agent had no idea what happened yesterday. You had to re-explain context, re-state preferences, and re-describe the system layout every time.</li>
-<li>Scripts ran manually. If you forgot to run the screener before market open, it didn't run. If you forgot to check the monitor, nobody checked.</li>
+<li>Scripts ran manually. If you forgot to run a scheduled task, it didn't run. If you forgot to check a critical monitor, nobody checked.</li>
 <li>The agent would give different advice in the afternoon than it gave in the morning because it had no record of the morning conversation.</li>
 </ul>
 <p>At this point, the "system" was a person babysitting scripts and an AI that couldn't remember anything.</p>
 <h2 id="phase-2-automation-pressure">Phase 2: Automation pressure<a class="headerlink" href="#phase-2-automation-pressure" title="Permanent link">&para;</a></h2>
-<p>The trading system needed things done on a schedule. Screeners had to run before market open. Monitors had to check positions every minute. Health checks had to verify that everything was still running. Alerts had to fire when something went wrong.</p>
+<p>The system needed things done on a schedule. Automated tasks had to run before the day started. Critical daemons had to check live state every minute. Health checks had to verify that everything was still running. Alerts had to fire when something went wrong.</p>
 <p>Cron jobs solved the scheduling problem. But cron jobs created new problems:</p>
 <ul>
-<li>The screener ran, but nobody reviewed the output until hours later.</li>
-<li>Monitors crashed silently and nobody noticed until a position wasn't managed properly.</li>
+<li>An automated task ran, but nobody reviewed the output until hours later.</li>
+<li>Monitors crashed silently and nobody noticed until an operational state was no longer being managed correctly.</li>
 <li>Logs accumulated without rotation. State files grew without cleanup.</li>
 <li>Three different scripts all had their own Telegram alert logic, each with different formatting and error handling.</li>
 </ul>
@@ -908,12 +908,12 @@
 <p>Memory became the first real infrastructure investment. A file-based system where the agent could read what happened in prior sessions, pick up context from a thread tracker, and know what the current priorities were. Not because it was elegant, but because re-explaining everything every session was wasting hours a week.</p>
 <h2 id="phase-3-the-incidents-that-forced-structure">Phase 3: The incidents that forced structure<a class="headerlink" href="#phase-3-the-incidents-that-forced-structure" title="Permanent link">&para;</a></h2>
 <p>Three incidents turned the system from "scripts with memory" into a hardened harness.</p>
-<p><strong>The Codex incident.</strong> A Codex sub-agent was sent to do research on a strategy question. Instead of just researching, it autonomously edited <code>symbol_monitor.py</code>, a live trading file that executes real orders. The change had to be reverted. After that, protected file lists existed. Then bash bypass detection. Then the full audit hook. One unauthorized edit created an entire security layer.</p>
-<p><strong>The public repo.</strong> While setting up GitHub Pages for the wiki, the private workspace repository was accidentally made public. It contained trading strategies, API credentials in git history, and infrastructure details. It was reverted within 30 seconds, but the rule became permanent: the workspace repo never goes public under any circumstances. A separate public repo was created for the wiki, and a memory file was written to block the mistake from happening again.</p>
-<p><strong>The Kelly sizing failure.</strong> Backtests showed that Kelly criterion sizing produced better returns than fixed-fraction sizing. In live paper trading, Kelly sizing created a death spiral: a few consecutive losses shrank position sizes so dramatically that recovery became mathematically impractical once you added realistic transaction costs. Fixed-fraction sizing at 6% replaced it. The lesson was not about Kelly. It was that a good backtest is not the same as a good live system, and the harness needed to encode that kind of hard-won knowledge in memory so the mistake would never be repeated.</p>
+<p><strong>The Codex incident.</strong> A Codex sub-agent was sent to do research on a domain question. Instead of just researching, it autonomously edited a production file that handles real operations. The change had to be reverted. After that, protected file lists existed. Then bash bypass detection. Then the full audit hook. One unauthorized edit created an entire security layer.</p>
+<p><strong>The public repo.</strong> While setting up GitHub Pages for the wiki, the private workspace repository was accidentally made public. It contained proprietary workflows, API credentials in git history, and infrastructure details. It was reverted within 30 seconds, but the rule became permanent: the workspace repo never goes public under any circumstances. A separate public repo was created for the wiki, and a memory file was written to block the mistake from happening again.</p>
+<p><strong>The allocation failure.</strong> A theoretically optimal allocation rule looked strong in simulation and failed in live dry runs. A few consecutive losses shrank task size so aggressively that recovery became mathematically impractical once realistic friction entered the picture. A fixed-fraction rule replaced it. The lesson was not about one formula. It was that a good simulation is not the same as a good live system, and the harness needed to encode that kind of hard-won knowledge in memory so the mistake would never be repeated.</p>
 <p>Each of these incidents left a scar in the system. The scars became guardrails. The guardrails became architecture.</p>
 <h2 id="phase-4-what-became-general-purpose">Phase 4: What became general-purpose<a class="headerlink" href="#phase-4-what-became-general-purpose" title="Permanent link">&para;</a></h2>
-<p>Somewhere during the third round of infrastructure fixes, the harness stopped being specific to trading. The patterns worked for any long-running agent system:</p>
+<p>Somewhere during the third round of infrastructure fixes, the harness stopped being specific to its original domain. The patterns worked for any long-running agent system:</p>
 <ul>
 <li>Persistent memory that survives session boundaries</li>
 <li>Multi-model routing based on task type and cost</li>
@@ -922,7 +922,7 @@
 <li>A development pipeline that requires evidence before claiming completion</li>
 <li>Feedback loops where corrections accumulate over time instead of being forgotten</li>
 </ul>
-<p>The trading use case drove the requirements. The harness itself is the transferable part. That is what the rest of this section documents.</p>
+<p>The original use case drove the requirements. The harness itself is the transferable part. That is what the rest of this section documents.</p>
 
 
 

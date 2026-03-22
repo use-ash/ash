@@ -1022,7 +1022,7 @@
 <p>Each tool call becomes one JSONL record. The record includes a timestamp, session ID, agent ID or type, tool name, target file path when one exists, block or warning status, and a short command snippet for shell commands. That log is the forensic record. It answers who touched what, when they touched it, and whether the harness allowed it.</p>
 <p>The system also keeps a separate error log for hook failures. That matters because the audit layer should not hide its own bugs inside the main log stream.</p>
 <h2 id="protected-file-blocking">Protected file blocking<a class="headerlink" href="#protected-file-blocking" title="Permanent link">&para;</a></h2>
-<p>Some files are too dangerous to edit through an agent loop. The hook hard-blocks <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code>, and related write tools when the target resolves to <code>symbol_monitor.py</code>, <code>position_monitor.py</code>, the hook script itself, <code>.env</code>, <code>settings.json</code>, or secret-bearing paths that match <code>*.key</code>, <code>*.pem</code>, or <code>*.secret</code>.</p>
+<p>Some files are too dangerous to edit through an agent loop. The hook hard-blocks <code>Edit</code>, <code>Write</code>, <code>MultiEdit</code>, and related write tools when the target resolves to the primary production script, the critical daemon, the hook script itself, <code>.env</code>, <code>settings.json</code>, or secret-bearing paths that match <code>*.key</code>, <code>*.pem</code>, or <code>*.secret</code>.</p>
 <p>The block happens on the resolved path, not the path string the agent typed. The hook runs every candidate through <code>os.path.realpath</code> first. That closes the easy symlink trick where a harmless-looking path points at a protected file.</p>
 <p>The exit code matters too. The hook returns exit code 2 for a hard block. That lets the caller distinguish a deliberate deny from a crash.</p>
 <h2 id="bash-bypass-detection">Bash bypass detection<a class="headerlink" href="#bash-bypass-detection" title="Permanent link">&para;</a></h2>
@@ -1037,7 +1037,7 @@
 <p>The harness routes that content through <code>scripts/sanitize_external.py</code>. That script sends the text to a local GLM model running in Ollama with no tools, no file access, and no network. The model gets one job: summarize the content and ignore embedded instructions. If sanitization fails, the script wraps the raw content in explicit untrusted markers instead of passing it through as normal context.</p>
 <p>That sandbox matters. Even if the outside text says "run this command" or "ignore your prior rules," the model receiving it has no way to act on the instruction.</p>
 <h2 id="secret-scanning">Secret scanning<a class="headerlink" href="#secret-scanning" title="Permanent link">&para;</a></h2>
-<p>A security audit found 908 API keys across 32 Claude Code session transcripts. Keys from every integrated service — Anthropic, Telegram, Tradier, Alpaca, xAI, GitHub — had leaked into conversation logs through normal tool use. A model reads a <code>.env</code> file, the key appears in tool output, the tool output gets persisted in a transcript, and the transcript sits on disk indefinitely.</p>
+<p>A security audit found 908 API keys across 32 Claude Code session transcripts. Keys from every integrated service — Anthropic, Telegram, execution APIs, research APIs, xAI, GitHub — had leaked into conversation logs through normal tool use. A model reads a <code>.env</code> file, the key appears in tool output, the tool output gets persisted in a transcript, and the transcript sits on disk indefinitely.</p>
 <p>That incident drove three layers of secret defense.</p>
 <p><strong>Layer 1: Pre-commit scan.</strong> The <code>scripts/guardrails/secret_scan.py</code> module defines regex patterns for every secret type the workspace touches. The pre-commit hook in <code>run_guardrails.py</code> runs those patterns against the staged diff. If a secret appears in any added line, the commit is rejected with the pattern name, a truncated match, and the line number. The developer fixes the leak before the secret reaches git history. A bypass marker (<code>openclaw: allow-secret-fixture</code>) exists for files that legitimately contain pattern strings, such as the scanner's own regex definitions.</p>
 <p><strong>Layer 2: PostToolUse masking.</strong> A hook script (<code>scripts/guardrails/output_secret_filter.sh</code>) runs after every Bash tool call. It reads the tool output, scans for the same secret patterns, and replaces matches with <code>[REDACTED:LABEL]</code> before the output reaches the conversation context. If a model runs <code>cat .env</code>, it sees masked values, not real keys. The hook logs masked events to <code>logs/secret_filter.log</code> for audit, but never logs the actual secret values.</p>
@@ -1060,16 +1060,16 @@
 <p>Three categories of protected paths exist:</p>
 <ol>
 <li>
-<p><strong>Live trading execution.</strong> <code>symbol_monitor.py</code>, <code>position_monitor.py</code>, and the shell scripts that launch them. These run in cron during market hours. A syntax error here means missed trades or orphaned positions. These were the original protected paths.</p>
+<p><strong>Live production execution.</strong> The primary production script, the critical daemon, and the shell scripts that launch them. These run in cron during operational hours. A syntax error here means missed actions or orphaned state. These were the original protected paths.</p>
 </li>
 <li>
 <p><strong>Configuration and hooks.</strong> Crontab files, <code>.claude/settings.json</code>, <code>.githooks/pre-commit</code>, and guardrail scripts. A bad edit to the deny list could silently remove protection. A broken pre-commit hook could disable secret scanning.</p>
 </li>
 <li>
-<p><strong>Cron wrappers.</strong> The shell scripts that launch screeners, monitors, and maintenance jobs. These are the glue between crontab and Python. If one silently fails, a production monitor stops running and nobody notices until the next health check.</p>
+<p><strong>Cron wrappers.</strong> The shell scripts that launch automated tasks, monitors, and maintenance jobs. These are the glue between crontab and Python. If one silently fails, a production daemon stops running and nobody notices until the next health check.</p>
 </li>
 </ol>
-<p>All three categories require the environment variable <code>OPENCLAW_ACK_LIVE_TRADING=1</code> to commit. That variable is not set by default. The developer must explicitly acknowledge the risk.</p>
+<p>All three categories require an explicit acknowledgement environment variable to commit. That variable is not set by default. The developer must explicitly acknowledge the risk.</p>
 <p>A fourth category — protected path warnings — covers <code>scripts/guardrails/</code>, <code>.claude/</code>, and <code>.githooks/</code> directories. Changes here print a warning but do not block the commit. The warning exists so that a reviewer scanning the commit output does not miss a guardrail change buried in a large diff.</p>
 <h2 id="stop-hook">Stop hook<a class="headerlink" href="#stop-hook" title="Permanent link">&para;</a></h2>
 <p>The Stop hook (<code>scripts/guardrails/pipeline_stop.sh</code>) runs when a Claude Code session ends. It checks the git working tree for uncommitted changes and prints reminders if pipeline gates were likely skipped.</p>
