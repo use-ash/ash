@@ -397,6 +397,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -808,6 +827,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -910,18 +956,18 @@
 <h2 id="roles-not-rankings">Roles, not rankings<a class="headerlink" href="#roles-not-rankings" title="Permanent link">&para;</a></h2>
 <p>The harness does not ask one model to do everything. It routes work by fit.</p>
 <p>Claude is the orchestrator. Claude reads the workspace, decides what kind of task is in front of it, dispatches bounded work, and judges the result. That role matters more than raw model quality because the system fails at the seams, not in the middle of a single answer.</p>
-<p>Codex handles code. It audits diffs, writes patches, runs validation jobs, and reviews design changes that depend on the filesystem. Grok handles live web research. It fetches current information through either browser automation or the xAI API. The local MLX model handles cheap maintenance triage on the Mac Studio. It runs at no token cost and returns answers fast enough to sit in a health-check pipeline.</p>
+<p>Codex handles code. It audits diffs, writes patches, runs validation jobs, and reviews design changes that depend on the filesystem. Grok handles live web research. It fetches current information and synthesizes findings across multiple sources. The local model handles cheap maintenance triage. It runs at no token cost and returns answers fast enough to sit in a health-check pipeline.</p>
 <p>None of these roles imply a ranking. They describe tool fit. Codex is better at bounded code work than Grok. Grok is better at live research than Codex. The local model is worse at both, but cheap enough to use for routine triage.</p>
 <h2 id="decision-matrix">Decision matrix<a class="headerlink" href="#decision-matrix" title="Permanent link">&para;</a></h2>
-<p>The routing rules stay blunt on purpose. Code audit goes to Codex. Validation runs go to Codex. Design review for a patch goes to Codex. Live research goes to Grok browser, with three deep-research rounds when the claim matters. Quick lookup goes to the Grok API. Maintenance triage goes to the local MLX server first, with Grok as fallback if the local model is down.</p>
+<p>The routing rules stay blunt on purpose. Code audit goes to Codex. Validation runs go to Codex. Design review for a patch goes to Codex. Live research goes to Grok, with multiple research rounds when the claim matters. Quick lookup also goes to Grok. Maintenance triage goes to the local model first, with Grok as fallback if the local model is down.</p>
 <p>Second opinions are a special case. When the system wants a check, not a delegate, Claude can send the same question to more than one model and compare the evidence. That only works if the prompt is concrete and the scoring rule is clear.</p>
 <h2 id="dispatch-paths">Dispatch paths<a class="headerlink" href="#dispatch-paths" title="Permanent link">&para;</a></h2>
 <p><code>skills/codex/run_codex.sh</code> is the Codex wrapper. It reads a prompt file, writes a response file, and exposes a small set of switches that matter in practice: sandbox mode, writable paths, model override, and <code>--network</code> for tasks that need live data. The wrapper also injects a context-skip header by default so Codex does not burn tokens reading memory and continuity files before touching the task.</p>
-<p>Grok has two paths. <code>skills/grok/grok_browser.py</code> drives a Chrome session on the debug port for deep research. Its default loop runs three rounds: first-pass search, gap-filling search, then synthesis. Each round carries an honesty constraint that tells Grok to cite URLs, flag uncertainty, and mark unsupported claims as unverified. <code>skills/grok/run_grok.sh</code> is the API path. It is cheaper to automate and supports flags such as <code>--search</code>, <code>--research</code>, and <code>--thinking</code>.</p>
-<p>The local MLX path is plain HTTP. The server listens on port 8897 and exposes an OpenAI-compatible chat endpoint. Maintenance scripts post a prompt and read back a short triage result.</p>
+<p>Grok handles research through its standard API. The harness wraps it in a dispatch script that supports search, deep research, and configurable thinking depth. For tasks where accuracy matters, the system runs multiple research rounds: first-pass search, gap-filling for uncertainties, then synthesis. Each round carries an honesty constraint requiring cited URLs and explicit uncertainty markers.</p>
+<p>The local model runs as an OpenAI-compatible HTTP server. Maintenance scripts post a prompt and read back a short triage result. No external calls, no token cost.</p>
 <h2 id="context-transfer">Context transfer<a class="headerlink" href="#context-transfer" title="Permanent link">&para;</a></h2>
 <p>Claude is the only model that sees the full workspace as part of its working loop. That makes Claude the control plane.</p>
-<p>Grok never gets filesystem access. If Grok needs code context, Claude pastes the relevant file content into the prompt. The MLX server works the same way. It gets a report over HTTP, not a path to inspect.</p>
+<p>Grok never gets filesystem access. If Grok needs code context, Claude pastes the relevant file content into the prompt. The local model works the same way. It gets a report over HTTP, not a path to inspect.</p>
 <p>Codex can receive disk access through its wrapper, but Claude still treats Codex as a bounded worker, not as a second orchestrator. The prompt should include the files that matter. That keeps the task narrow and avoids budget burn from blind exploration.</p>
 <h2 id="failure-modes">Failure modes<a class="headerlink" href="#failure-modes" title="Permanent link">&para;</a></h2>
 <p>The first coordination failure came from waste, not error. Codex would spend part of its budget exploring the workspace before addressing the task. The context-skip header in <code>run_codex.sh</code> fixed that by blocking irrelevant reads at the top of the prompt.</p>

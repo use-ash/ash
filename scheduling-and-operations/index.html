@@ -397,6 +397,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -808,6 +827,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -917,8 +963,8 @@
 <p>At 5:55 AM and 6:05 AM, the main automated screeners run. The critical daemon starts at 6:00 AM. By 6:15 AM and 6:25 AM, the trackers and live monitors take over. They keep watch during operational hours, while the log watcher checks the health of the logging surface every five minutes.</p>
 <p>The afternoon cycle is shorter. At 1:30 PM, a secondary screener runs. At 1:35 PM, the pattern tracker evaluates late changes and invalidations. At 1:45 PM, the downstream tracker updates, and the daily digest builds the operator-facing summary for the day.</p>
 <h2 id="health-checks-with-ai-triage">Health checks with AI triage<a class="headerlink" href="#health-checks-with-ai-triage" title="Permanent link">&para;</a></h2>
-<p>The maintenance pass does not guess. It runs a fixed set of deterministic checks, about 18 at the time of writing. The list covers the OpenClaw gateway, the MLX server on port 8897, <code>caffeinate</code>, external provider cookies, cron freshness, WireGuard, execution API credentials, disk use, heartbeat freshness, the GCP failover VM, throttle state, automation output, and CVE scan or remediation state.</p>
-<p>After the checks finish, the script writes a report and sends that report to the local MLX model for triage. The model returns a short prioritization with likely causes and suggested fixes. If the local server is down, the script falls back to the Grok API and labels the triage with the model that produced it. That small detail matters when the operator reads the report later. A local Qwen judgment and a Grok fallback are not the same thing.</p>
+<p>The maintenance pass does not guess. It runs a fixed set of deterministic checks, about 18 at the time of writing. The list covers the gateway process, the local model server, sleep prevention, external provider cookies, cron freshness, VPN connectivity, execution API credentials, disk use, heartbeat freshness, the cloud failover VM, throttle state, automation output, and CVE scan or remediation state.</p>
+<p>After the checks finish, the script writes a report and sends that report to the local model for triage. The model returns a short prioritization with likely causes and suggested fixes. If the local server is down, the script falls back to Grok and labels the triage with the model that produced it. That small detail matters when the operator reads the report later. A local judgment and a cloud fallback are not the same thing.</p>
 <h2 id="log-watcher">Log watcher<a class="headerlink" href="#log-watcher" title="Permanent link">&para;</a></h2>
 <p><code>log_watcher.py</code> runs every five minutes during operational hours. It checks three layers at once: log freshness, process status, and structured error counts from JSONL logs.</p>
 <p>The watcher also grew from a health checker into an automated-task summary surface. For one screener, it reads the latest structured run log and reports category-level trends, raw signal count, filter breakdown, and the split between new candidates, repeat candidates, and near misses. That turns a stale log file into an operational summary.</p>

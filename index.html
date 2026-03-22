@@ -395,6 +395,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -523,32 +542,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-this-section-does-not-cover" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What this section does not cover
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#if-youre-new-here" class="md-nav__link">
     <span class="md-ellipsis">
       
         If you're new here
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-cases" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Use cases
       
     </span>
   </a>
@@ -806,6 +803,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -855,32 +879,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-this-section-does-not-cover" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What this section does not cover
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#if-youre-new-here" class="md-nav__link">
     <span class="md-ellipsis">
       
         If you're new here
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-cases" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Use cases
       
     </span>
   </a>
@@ -905,8 +907,8 @@
 
 
 <h1 id="agent-harness">Agent Harness<a class="headerlink" href="#agent-harness" title="Permanent link">&para;</a></h1>
-<p>This section documents the operating layer that sits between you and the AI models. Not the domain logic, not the workload-specific decision rules. The harness. The thing that makes an AI agent remember what happened yesterday, route work to the right model, block dangerous actions before they happen, and run 40 jobs a day without anyone touching a keyboard.</p>
-<p>It started as a chatbot with some scripts. It turned into something closer to an operating system for AI agents.</p>
+<p>The operating layer that sits between you and the AI models. Not the domain logic. Not your specific workload. The harness. The thing that makes an AI agent remember what happened yesterday, route work to the right model, block dangerous actions before they happen, and run jobs all day without anyone touching a keyboard.</p>
+<p>We built this for a specific domain. But the patterns are general-purpose. People are building the same architecture for CRM pipelines, content operations, overnight coding loops, and personal knowledge management. The domain changes. The control plane does not.</p>
 <h2 id="what-the-harness-does">What the harness does<a class="headerlink" href="#what-the-harness-does" title="Permanent link">&para;</a></h2>
 <p>Five jobs, running all day:</p>
 <ol>
@@ -971,14 +973,14 @@
 <td><a href="lessons-and-failure-modes/">Lessons and Failure Modes</a></td>
 <td>What broke, what we learned, and what we would build earlier next time</td>
 </tr>
+<tr>
+<td><a href="implementations/">Implementations</a></td>
+<td>Real systems built with these patterns, from trading to CRM to personal knowledge management</td>
+</tr>
 </tbody>
 </table>
-<h2 id="what-this-section-does-not-cover">What this section does not cover<a class="headerlink" href="#what-this-section-does-not-cover" title="Permanent link">&para;</a></h2>
-<p>Domain rules, scoring logic, simulation results, or workload-specific analysis. Those live next to the workload itself. This section is about the machine that runs it.</p>
 <h2 id="if-youre-new-here">If you're new here<a class="headerlink" href="#if-youre-new-here" title="Permanent link">&para;</a></h2>
-<p>Start with <a href="how-we-got-here/">How We Got Here</a> for the story, then <a href="architecture/">System Architecture</a> for the map. After that, pick the topic that matters most to you. If you run systems, go to Security and Scheduling. If you build things, go to Model Coordination and the Dev Pipeline. Everyone should read the Lessons page at the end.</p>
-<h2 id="use-cases">Use cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
-<p>These patterns transfer cleanly. Nate B. Jones' Open Brain uses SQL plus MCP for the same memory problem this harness solves with files. Daniel Miessler's Personal AI Infrastructure lands on similar ideas too: tiered memory, hooks, and explicit goals that survive session resets. The OpenClaw community keeps rediscovering the same architecture in different forms, from skills registries to cron gateways to multi-agent fleets. In practice that means the harness patterns show up in CRM pipelines, content calendars, job search automation, customer success monitoring, and overnight coding loops. The domain changes. The control plane does not. Build the memory, routing, guardrails, and operations layer once, then point it at whatever work matters in your environment.</p>
+<p>Start with <a href="how-we-got-here/">How We Got Here</a> for the story, then <a href="architecture/">System Architecture</a> for the map. After that, pick the topic that matters most to you. If you run systems, go to Security and Scheduling. If you build things, go to Model Coordination and the Dev Pipeline. Finish with <a href="implementations/">Implementations</a> to see how these patterns show up in different domains.</p>
 
 
 

@@ -397,6 +397,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -797,6 +816,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -890,8 +936,8 @@
 <p><strong>Human operator.</strong> Sets goals, reviews results, approves risky actions, and makes final domain decisions. The harness reduces the operator's workload but never removes the operator from decisions that matter.</p>
 <p><strong>Claude Code (Opus 4.6).</strong> The orchestrator. Runs interactively during sessions, delegates to other models, reads and writes memory, manages state files, and makes tool calls. When the system needs judgment, Claude provides it. When the system needs speed or specialized capability, Claude delegates.</p>
 <p><strong>Codex (GPT-5.4).</strong> Handles bounded, parallel work. Code audits, builds, validation runs, and design tasks get dispatched through a wrapper script that constrains filesystem access and budget. Codex does not see the operator's conversation. It receives a prompt file and returns a response file.</p>
-<p><strong>Grok (xAI).</strong> Handles live web research. Two delivery paths: a browser automation script that uses a Chrome session for free deep research, and an API wrapper for fast automated lookups. Grok searches the web. Claude does not.</p>
-<p><strong>Local MLX model (Qwen3-Coder-Next).</strong> Runs on the Mac Studio for zero-cost triage and analysis. The maintenance system sends health check reports to this model for prioritized assessment. If the local model is down, the system falls back to the Grok API automatically.</p>
+<p><strong>Grok (xAI).</strong> Handles live web research. Searches the web, synthesizes findings, and flags uncertainty. Claude does not search the web. When the harness needs current information, it delegates to Grok.</p>
+<p><strong>Local model.</strong> Runs on the same machine for zero-cost triage and analysis. The maintenance system sends health check reports to this model for prioritized assessment. If the local model is down, the system falls back to Grok automatically.</p>
 <p><strong>Cron scheduler.</strong> The heartbeat. Over 40 jobs run throughout the day on fixed schedules. Automated tasks, monitors, trackers, health checks, log watchers, and report generators all fire without human intervention. Cron is more reliable than session-based scheduling because it survives restarts, crashes, and closed laptops.</p>
 <h2 id="control-plane-vs-work-plane">Control plane vs work plane<a class="headerlink" href="#control-plane-vs-work-plane" title="Permanent link">&para;</a></h2>
 <p>The harness separates two concerns:</p>
