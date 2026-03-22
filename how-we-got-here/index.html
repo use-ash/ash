@@ -13,7 +13,7 @@
       
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../implementations/">
       
       
         <link rel="next" href="../architecture/">
@@ -211,6 +211,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../what-is-an-agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  What is an AI Agent?
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href=".." class="md-tabs__link">
         
   
@@ -218,6 +237,25 @@
     
   
   Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
 
       </a>
     </li>
@@ -403,13 +441,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../implementations/" class="md-tabs__link">
+      <a href="../glossary/" class="md-tabs__link">
         
   
   
     
   
-  Implementations
+  Glossary
 
       </a>
     </li>
@@ -462,6 +500,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../what-is-an-agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What is an AI Agent?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href=".." class="md-nav__link">
         
   
@@ -470,6 +535,33 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
   
 
     
@@ -823,14 +915,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../implementations/" class="md-nav__link">
+      <a href="../glossary/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Implementations
+    Glossary
   
 
     
@@ -957,7 +1049,7 @@
 <p><strong>The Codex incident.</strong> A Codex sub-agent was sent to do research on a domain question. Instead of just researching, it autonomously edited a production file that handles real operations. The change had to be reverted. After that, protected file lists existed. Then bash bypass detection. Then the full audit hook. One unauthorized edit created an entire security layer.</p>
 <p><strong>The public repo.</strong> While setting up GitHub Pages for the wiki, the private workspace repository was accidentally made public. It contained proprietary workflows, API credentials in git history, and infrastructure details. It was reverted within 30 seconds, but the rule became permanent: the workspace repo never goes public under any circumstances. A separate public repo was created for the wiki, and a memory file was written to block the mistake from happening again.</p>
 <p><strong>The allocation failure.</strong> A theoretically optimal allocation rule looked strong in simulation and failed in live dry runs. A few consecutive losses shrank task size so aggressively that recovery became mathematically impractical once realistic friction entered the picture. A fixed-fraction rule replaced it. The lesson was not about one formula. It was that a good simulation is not the same as a good live system, and the harness needed to encode that kind of hard-won knowledge in memory so the mistake would never be repeated.</p>
-<p>Each of these incidents left a scar in the system. The scars became guardrails. The guardrails became architecture.</p>
+<p>None of these incidents caused lasting damage. Each one was caught quickly because the system was being watched. But each one exposed a gap that manual vigilance alone could not cover. The fixes became permanent infrastructure. That is how guardrails get built in practice: not from a planning document, but from a real problem that demanded a real solution.</p>
 <h2 id="phase-4-what-became-general-purpose">Phase 4: What became general-purpose<a class="headerlink" href="#phase-4-what-became-general-purpose" title="Permanent link">&para;</a></h2>
 <p>Somewhere during the third round of infrastructure fixes, the harness stopped being specific to its original domain. The patterns worked for any long-running agent system:</p>
 <ul>

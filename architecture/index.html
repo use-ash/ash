@@ -211,6 +211,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../what-is-an-agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  What is an AI Agent?
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href=".." class="md-tabs__link">
         
   
@@ -218,6 +237,25 @@
     
   
   Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../implementations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementations
 
       </a>
     </li>
@@ -403,13 +441,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../implementations/" class="md-tabs__link">
+      <a href="../glossary/" class="md-tabs__link">
         
   
   
     
   
-  Implementations
+  Glossary
 
       </a>
     </li>
@@ -462,6 +500,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../what-is-an-agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What is an AI Agent?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href=".." class="md-nav__link">
         
   
@@ -470,6 +535,33 @@
     
   
     Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementations
   
 
     
@@ -823,14 +915,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../implementations/" class="md-nav__link">
+      <a href="../glossary/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Implementations
+    Glossary
   
 
     
@@ -931,6 +1023,79 @@
 
 
 <h1 id="system-architecture">System Architecture<a class="headerlink" href="#system-architecture" title="Permanent link">&para;</a></h1>
+<p><svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;margin:0 auto 2rem;display:block">
+<br />
+<style>
+    .box { rx: 8; ry: 8; stroke-width: 1.5; }
+    .label { font-family: -apple-system, sans-serif; font-size: 12px; fill: #e2e8f0; text-anchor: middle; }
+    .sublabel { font-family: -apple-system, sans-serif; font-size: 9px; fill: #94a3b8; text-anchor: middle; }
+    .arrow { stroke: #475569; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+    .arrow-dashed { stroke: #334155; stroke-width: 1; fill: none; stroke-dasharray: 4,3; marker-end: url(#arrowhead); }
+    .zone-label { font-family: -apple-system, sans-serif; font-size: 10px; fill: #64748b; letter-spacing: 0.1em; text-transform: uppercase; }
+  </style></p>
+<p><defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+    </marker>
+  </defs>
+  <!-- Background zones --></p>
+<p><rect x="10" y="10" width="780" height="70" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="50" y="30" class="zone-label">Operator</text>
+  <rect x="10" y="90" width="780" height="100" rx="6" fill="#111827" stroke="#1e293b" stroke-width="1"/>
+  <text x="50" y="110" class="zone-label">Models</text>
+  <rect x="10" y="200" width="380" height="130" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="50" y="220" class="zone-label">State</text>
+  <rect x="410" y="200" width="380" height="130" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="450" y="220" class="zone-label">Automation</text>
+  <!-- Operator --></p>
+<p><rect x="320" y="30" width="160" height="36" class="box" fill="#1e293b" stroke="#3b82f6"/>
+  <text x="400" y="53" class="label">Human Operator</text>
+  <!-- Models --></p>
+<p><rect x="30" y="120" width="140" height="50" class="box" fill="#1e293b" stroke="#60a5fa"/>
+  <text x="100" y="142" class="label">Claude</text>
+  <text x="100" y="157" class="sublabel">orchestrator</text>
+  <rect x="200" y="120" width="140" height="50" class="box" fill="#1e293b" stroke="#a78bfa"/>
+  <text x="270" y="142" class="label">Codex</text>
+  <text x="270" y="157" class="sublabel">code tasks</text>
+  <rect x="370" y="120" width="140" height="50" class="box" fill="#1e293b" stroke="#34d399"/>
+  <text x="440" y="142" class="label">Grok</text>
+  <text x="440" y="157" class="sublabel">web research</text>
+  <rect x="540" y="120" width="140" height="50" class="box" fill="#1e293b" stroke="#fbbf24"/>
+  <text x="610" y="142" class="label">Local Model</text>
+  <text x="610" y="157" class="sublabel">cheap triage</text>
+  <!-- State --></p>
+<p><rect x="30" y="235" width="100" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="80" y="258" class="sublabel">Memory Files</text>
+  <rect x="145" y="235" width="100" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="195" y="258" class="sublabel">State JSON</text>
+  <rect x="260" y="235" width="110" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="315" y="258" class="sublabel">Audit Logs</text>
+  <rect x="100" y="285" width="180" height="30" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="190" y="305" class="sublabel">Embedding Index</text>
+  <!-- Automation --></p>
+<p><rect x="430" y="235" width="100" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="480" y="258" class="sublabel">Cron Jobs</text>
+  <rect x="545" y="235" width="100" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="595" y="258" class="sublabel">Health Checks</text>
+  <rect x="660" y="235" width="110" height="36" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="715" y="258" class="sublabel">Alerts</text>
+  <rect x="490" y="285" width="170" height="30" class="box" fill="#1e293b" stroke="#475569"/>
+  <text x="575" y="305" class="sublabel">Dashboard + Reports</text>
+  <!-- Arrows: Operator ↔ Claude --></p>
+<p><line x1="400" y1="66" x2="120" y2="120" class="arrow"/>
+  <!-- Claude → Codex --></p>
+<p><line x1="170" y1="145" x2="200" y2="145" class="arrow"/>
+  <!-- Claude → Grok --></p>
+<p><line x1="170" y1="150" x2="370" y2="150" class="arrow-dashed"/>
+  <!-- Claude → Local --></p>
+<p><line x1="170" y1="155" x2="540" y2="155" class="arrow-dashed"/>
+  <!-- Claude → State --></p>
+<p><line x1="100" y1="170" x2="100" y2="235" class="arrow"/>
+  <!-- Cron → Scripts --></p>
+<p><line x1="480" y1="271" x2="575" y2="285" class="arrow"/>
+  <!-- Health → Alerts --></p>
+<p><line x1="645" y1="253" x2="660" y2="253" class="arrow"/>
+</svg></p>
 <h2 id="the-actors">The actors<a class="headerlink" href="#the-actors" title="Permanent link">&para;</a></h2>
 <p>Six things participate in this system. They do not all run at the same time, and most of them do not talk to each other directly.</p>
 <p><strong>Human operator.</strong> Sets goals, reviews results, approves risky actions, and makes final domain decisions. The harness reduces the operator's workload but never removes the operator from decisions that matter.</p>
