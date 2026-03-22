@@ -837,6 +837,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#repository-exposure-prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository exposure prevention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#critical-path-protection" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1138,6 +1149,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#repository-exposure-prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository exposure prevention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#critical-path-protection" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1236,17 +1258,26 @@
 <p>The sandbox applies to both direct file writes (Edit, Write) and Bash commands that target paths outside the allowed zone. The same command parsing that catches protected file bypasses also catches sandbox violations. An agent that tries <code>echo "bad" &gt;&gt; ~/.zshrc</code> through a Bash tool gets blocked the same way as one that tries to Edit the file directly.</p>
 <p>A sandbox violation produces a hard block (exit code 2), a JSONL audit log entry, and a Telegram alert with the full resolved path. The alert tells the operator exactly what the agent tried to reach and which session attempted it.</p>
 <h2 id="deny-list">Deny list<a class="headerlink" href="#deny-list" title="Permanent link">&para;</a></h2>
-<p>The repo-level <code>.claude/settings.json</code> carries a permission deny list. It blocks commands that are destructive, history-rewriting, or common vectors for accidental damage.</p>
+<p>The repo-level settings file carries a permission deny list. It blocks commands that are destructive, history-rewriting, or common vectors for accidental damage. The deny list fires before the audit hook, so blocked commands never reach the hook at all.</p>
 <p>Blocked categories:</p>
 <ul>
 <li><strong>Destructive deletion:</strong> <code>rm -rf /</code>, <code>rm -rf ~</code>, <code>rm -rf .</code>, <code>git clean -fd</code></li>
-<li><strong>History rewriting:</strong> <code>git push --force</code> and <code>--force-with-lease</code> to main or master, <code>git reset --hard origin/*</code></li>
-<li><strong>Shell eval patterns:</strong> <code>eval</code>, <code>bash -c</code>, <code>sh -c</code>, <code>/bin/bash -c</code>, <code>/bin/sh -c</code></li>
+<li><strong>History rewriting:</strong> <code>git push --force</code>, <code>git reset --hard origin/*</code></li>
+<li><strong>Shell eval patterns:</strong> <code>eval</code>, <code>bash -c</code>, <code>sh -c</code></li>
 <li><strong>Pipe-to-shell installs:</strong> <code>curl ... | sh</code>, <code>wget ... | bash</code></li>
 <li><strong>Permission escalation:</strong> <code>chmod 777</code></li>
-<li><strong>Dotfile writes:</strong> redirects to <code>~/.ssh/</code>, <code>~/.zshrc</code>, <code>~/.bashrc</code>, <code>~/.zprofile</code>, <code>~/.openclaw/.env</code></li>
+<li><strong>Dotfile writes:</strong> redirects to <code>~/.ssh/</code>, <code>~/.zshrc</code>, <code>~/.bashrc</code>, <code>~/.zprofile</code></li>
+<li><strong>Repository exposure:</strong> <code>gh repo edit --visibility</code> (changing repo visibility), <code>git remote add</code> (adding remotes to the workspace), <code>git push * main</code> (pushing main branch to any remote)</li>
 </ul>
 <p>The deny list does not block reads. It does not block normal git operations, Python execution, or file editing inside the workspace. The goal is to prevent irreversible mistakes, not to create friction for normal work.</p>
+<h2 id="repository-exposure-prevention">Repository exposure prevention<a class="headerlink" href="#repository-exposure-prevention" title="Permanent link">&para;</a></h2>
+<p>This section exists because of a real incident. An agent pushed the workspace <code>main</code> branch to a public wiki repo. The workspace contained 7,501 files including personal documents, API tokens in memory notes, and the full infrastructure. Automated scanners detected an exposed token within hours.</p>
+<p>The root cause was simple: the workspace git repo had a public repo added as a second remote. When the agent ran <code>git push</code> to that remote, the <code>main</code> branch went with it. The agent thought it was pushing wiki content. It was pushing everything.</p>
+<p>Three rules now prevent this:</p>
+<p><strong>No remotes on the workspace repo.</strong> The workspace <code>.git</code> has exactly one remote: <code>origin</code>, pointing to the private code repository. Wiki deploys and public repo pushes happen from separate directories with their own isolated git history. Adding a second remote to the workspace is blocked by the deny list.</p>
+<p><strong>No visibility changes without approval.</strong> Changing a repo from private to public requires the operator to approve in the same message. The deny list blocks <code>gh repo edit --visibility</code> so the agent cannot execute the command even if it decides making a repo public is the fastest way to complete a task.</p>
+<p><strong>No pushing main to non-origin remotes.</strong> The deny list blocks <code>git push * main</code>. Wiki deploys use <code>gh-pages</code> branches only. The <code>main</code> branch of any repo that touches workspace content is the full codebase and must never reach a public remote.</p>
+<p>These rules layer with the audit hook and the sandbox. An agent would have to bypass the deny list, the audit hook, and the CLAUDE.md instructions to repeat the incident. The deny list alone is sufficient because it fires first and hard-blocks the command before any other layer sees it.</p>
 <h2 id="critical-path-protection">Critical path protection<a class="headerlink" href="#critical-path-protection" title="Permanent link">&para;</a></h2>
 <p>Pre-commit guardrails enforce acknowledgement gates on files where a bad edit has outsized consequences.</p>
 <p>Three categories of protected paths exist:</p>
