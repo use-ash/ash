@@ -695,10 +695,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#daily-schedule" class="md-nav__link">
+  <a href="#what-runs-and-when" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Daily schedule
+        What runs and when
       
     </span>
   </a>
@@ -710,17 +710,6 @@
     <span class="md-ellipsis">
       
         Health checks with AI triage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#log-watcher" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Log watcher
       
     </span>
   </a>
@@ -892,10 +881,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#daily-schedule" class="md-nav__link">
+  <a href="#what-runs-and-when" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Daily schedule
+        What runs and when
       
     </span>
   </a>
@@ -907,17 +896,6 @@
     <span class="md-ellipsis">
       
         Health checks with AI triage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#log-watcher" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Log watcher
       
     </span>
   </a>
@@ -955,23 +933,23 @@
 <h1 id="scheduling-and-operations">Scheduling and Operations<a class="headerlink" href="#scheduling-and-operations" title="Permanent link">&para;</a></h1>
 <h2 id="cron-as-heartbeat">Cron as heartbeat<a class="headerlink" href="#cron-as-heartbeat" title="Permanent link">&para;</a></h2>
 <p>The harness runs on cron, not on hope.</p>
-<p>More than 40 cron jobs fire across the operational day. That replaced session-bound loops such as <code>/loop</code>, which die when the laptop closes, the session crashes, or the model gets interrupted. Cron survives all of those failure modes. It wakes the scripts on time, whether anyone is in chat or not.</p>
-<p>Each job writes to a log. State files capture outputs that need structure. The daily digest reads those state files and logs, then turns them into a dashboard and a Telegram summary. The result feels like a heartbeat because the system keeps moving without a live operator in front of it.</p>
-<h2 id="daily-schedule">Daily schedule<a class="headerlink" href="#daily-schedule" title="Permanent link">&para;</a></h2>
-<p>The day starts at 4:50 AM Pacific with maintenance health checks. That pass verifies the machine, the local models, the scheduler, credentials, and a set of production assumptions that can drift overnight.</p>
-<p>At 5:15 AM, the X sentiment scan runs. It pulls an early external read before the production scripts start building the day's candidate set.</p>
-<p>At 5:55 AM and 6:05 AM, the main automated screeners run. The critical daemon starts at 6:00 AM. By 6:15 AM and 6:25 AM, the trackers and live monitors take over. They keep watch during operational hours, while the log watcher checks the health of the logging surface every five minutes.</p>
-<p>The afternoon cycle is shorter. At 1:30 PM, a secondary screener runs. At 1:35 PM, the pattern tracker evaluates late changes and invalidations. At 1:45 PM, the downstream tracker updates, and the daily digest builds the operator-facing summary for the day.</p>
+<p>More than 40 cron jobs fire across the operational day. That replaced session-bound loops like <code>/loop</code>, which die when the laptop closes, the session crashes, or the model gets interrupted. Cron survives all of those failure modes. It wakes the scripts on time, whether anyone is in chat or not.</p>
+<p>Each job writes to a log. State files capture outputs that need structure. A daily digest reads those state files and logs, then turns them into a dashboard and a summary alert. The system keeps moving without a live operator in front of it.</p>
+<h2 id="what-runs-and-when">What runs and when<a class="headerlink" href="#what-runs-and-when" title="Permanent link">&para;</a></h2>
+<p>The jobs fall into categories, not a rigid timeline. The exact schedule depends on the domain, but the categories are the same in any harness:</p>
+<p><strong>Pre-work checks.</strong> Health checks, credential verification, dependency status. These run before the operational window opens. If something is broken, the operator finds out before it matters.</p>
+<p><strong>Data collection.</strong> External signal scans, sentiment analysis, data feeds. These populate the state files that downstream jobs depend on.</p>
+<p><strong>Core automation.</strong> Screeners, monitors, trackers. The jobs that do the actual work the harness was built for. They read inputs, apply rules, produce outputs, and log everything.</p>
+<p><strong>Post-work synthesis.</strong> Daily digest, report generation, state cleanup. These summarize what happened and prepare the system for the next cycle.</p>
+<p><strong>Continuous monitoring.</strong> Log watchers, process health checks, heartbeat uploads. These run throughout the day at short intervals to catch silent failures.</p>
 <h2 id="health-checks-with-ai-triage">Health checks with AI triage<a class="headerlink" href="#health-checks-with-ai-triage" title="Permanent link">&para;</a></h2>
-<p>The maintenance pass does not guess. It runs a fixed set of deterministic checks, about 18 at the time of writing. The list covers the gateway process, the local model server, sleep prevention, external provider cookies, cron freshness, VPN connectivity, execution API credentials, disk use, heartbeat freshness, the cloud failover VM, throttle state, automation output, and CVE scan or remediation state.</p>
-<p>After the checks finish, the script writes a report and sends that report to the local model for triage. The model returns a short prioritization with likely causes and suggested fixes. If the local server is down, the script falls back to Grok and labels the triage with the model that produced it. That small detail matters when the operator reads the report later. A local judgment and a cloud fallback are not the same thing.</p>
-<h2 id="log-watcher">Log watcher<a class="headerlink" href="#log-watcher" title="Permanent link">&para;</a></h2>
-<p><code>log_watcher.py</code> runs every five minutes during operational hours. It checks three layers at once: log freshness, process status, and structured error counts from JSONL logs.</p>
-<p>The watcher also grew from a health checker into an automated-task summary surface. For one screener, it reads the latest structured run log and reports category-level trends, raw signal count, filter breakdown, and the split between new candidates, repeat candidates, and near misses. That turns a stale log file into an operational summary.</p>
+<p>The maintenance pass runs a fixed set of deterministic checks. Each check is a simple pass/fail against an observable condition: is this process running, is this log fresh, is this credential valid, is this service reachable.</p>
+<p>After the checks finish, the results go to the local model for triage. The model reads the raw report and returns a prioritized assessment with likely root causes and suggested fixes. If the local model is down, the system falls back to a cloud model and labels the triage with whichever model produced it. That label matters when the operator reviews the report later.</p>
+<p>This pattern works because deterministic checks are reliable but dumb. They catch problems but do not prioritize them. The model adds judgment without adding fragility, because the checks still run and still log even if the model fails.</p>
 <h2 id="alert-fatigue">Alert fatigue<a class="headerlink" href="#alert-fatigue" title="Permanent link">&para;</a></h2>
-<p>The system sends a lot of Telegram. Blocks from the audit hook. Warnings from shell safety checks. Maintenance failures. Automated task results. Daily summaries.</p>
+<p>The system sends a lot of notifications. Blocks from the audit hook. Warnings from shell safety checks. Maintenance failures. Automation results. Daily summaries.</p>
 <p>That volume creates its own risk. If every event looks urgent, none of them do.</p>
-<p>The harness attacks the problem in two ways. It throttles repeat alert types with a five-minute cooldown, and it aggregates broad state into the daily digest. Those controls help. They do not solve the whole problem. The operator still needs signal discipline from the scripts themselves. A production system that pages on every wobble trains its human to ignore the page.</p>
+<p>Two controls help. Throttling suppresses repeat alert types with a cooldown window. Aggregation rolls broad state into a single daily digest instead of sending individual updates. Those controls reduce noise but do not solve the whole problem. The operator still needs signal discipline from the scripts themselves. A system that alerts on every minor wobble trains its human to ignore alerts entirely.</p>
 
 
 

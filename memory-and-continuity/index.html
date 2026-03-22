@@ -636,6 +636,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#feedback-how-the-agent-improves-over-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feedback: how the agent improves over time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-good-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -914,6 +925,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#feedback-how-the-agent-improves-over-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feedback: how the agent improves over time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-good-memory" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -966,6 +988,19 @@
 <p><code>conversation_state.json</code> is the thread ledger. It tracks active and closed threads, with fields for title, status, summary, next steps, channels seen, and timestamps such as <code>opened_at</code> and <code>last_activity</code>. The file also stores session-wide context such as the last model and the last session notes.</p>
 <p>This file survives more than one boundary. It survives a new Claude session. It survives a handoff from webchat to Telegram. It survives model changes, because the state lives outside the model. That is the core point. The system does not depend on a single context window staying alive.</p>
 <p>The file also gives the operator a clean answer to a hard question: what is still open? Without that ledger, half-finished work disappears into chat history.</p>
+<h2 id="feedback-how-the-agent-improves-over-time">Feedback: how the agent improves over time<a class="headerlink" href="#feedback-how-the-agent-improves-over-time" title="Permanent link">&para;</a></h2>
+<p>Feedback is the most valuable memory type. Every other type describes the world. Feedback changes the agent's behavior.</p>
+<p>When the operator corrects the agent ("don't do that", "check memory first", "push to the correct repo"), the correction gets saved as a <code>feedback_*.md</code> file. The file records three things: the rule itself, why it exists, and how to apply it in future sessions. That structure matters because a rule without context gets applied too broadly, and a rule without application instructions gets ignored.</p>
+<p>The pattern works because corrections compound. The first time the agent makes a mistake, the operator catches it. The second time, the memory catches it. Over weeks, the agent accumulates dozens of behavioral corrections that would be impossible to maintain in a system prompt or set of instructions. The corrections are specific ("MkDocs serve needs a manual restart after edits"), contextual ("because live reload doesn't work in our setup"), and durable (they survive session boundaries, model changes, and context window resets).</p>
+<p>Skills have their own feedback mechanism. Each skill directory can include a <code>feedback.log</code> file. The skill reads that log before every execution and applies all entries. During execution, new corrections get appended. This keeps skill-level lessons close to the skill itself instead of buried in the general memory index.</p>
+<p>Examples of feedback that changed behavior:</p>
+<ul>
+<li>"Never make the workspace repository public" — saved after a 30-second accidental exposure, now blocks the action even if the operator requests it</li>
+<li>"Check memory before asking the user" — saved after the agent asked the operator for information that was already in memory</li>
+<li>"Push changes to the dedicated repo, not just the workspace copy" — saved after a fix was committed to the wrong repository</li>
+<li>"MkDocs serve does not auto-reload" — saved after the operator corrected this multiple times in the same session</li>
+</ul>
+<p>Without feedback memory, these corrections evaporate between sessions. The agent makes the same mistake on Tuesday that it made on Monday. With feedback memory, the correction persists and the mistake stops recurring. That compounding effect is the single biggest quality improvement in the entire harness.</p>
 <h2 id="writing-good-memory">Writing good memory<a class="headerlink" href="#writing-good-memory" title="Permanent link">&para;</a></h2>
 <p>Good memory files stay narrow. One topic per file. Short descriptions. Explicit decisions with dates when dates matter. If the note records a rule, name the condition and the outcome. If it records a correction, write the correction in the form future sessions can use.</p>
 <p>Do not duplicate the same fact across three notes. Duplication creates drift, and drift creates false confidence. Link to the canonical note from the index and leave it there.</p>
