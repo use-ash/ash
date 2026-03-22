@@ -815,6 +815,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#workspace-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workspace sandbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deny-list" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1094,6 +1105,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#workspace-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workspace sandbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deny-list" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1184,6 +1206,13 @@
 <p><strong>Layer 2: PostToolUse masking.</strong> A hook script (<code>scripts/guardrails/output_secret_filter.sh</code>) runs after every Bash tool call. It reads the tool output, scans for the same secret patterns, and replaces matches with <code>[REDACTED:LABEL]</code> before the output reaches the conversation context. If a model runs <code>cat .env</code>, it sees masked values, not real keys. The hook logs masked events to <code>logs/secret_filter.log</code> for audit, but never logs the actual secret values.</p>
 <p><strong>Layer 3: Transcript scrubbing.</strong> The session cleanup script (<code>maintenance/session_cleanup.py</code>) runs a final scrub when archiving old transcripts. Any secrets that slipped through layers 1 and 2 get replaced with redaction markers. This is the backstop. It handles the gap between "we added scanning" and "scanning existed when the transcript was written."</p>
 <p>Each layer catches what the previous one missed. The pre-commit scan stops secrets from entering git. The PostToolUse hook stops them from entering conversation context. The transcript scrub cleans up historical leaks. No single layer is sufficient because secrets enter the system through different paths at different times.</p>
+<h2 id="workspace-sandbox">Workspace sandbox<a class="headerlink" href="#workspace-sandbox" title="Permanent link">&para;</a></h2>
+<p>The audit hook enforces a filesystem sandbox. The agent can write inside the workspace directory and <code>/tmp</code>. Everything else is blocked by default.</p>
+<p>This matters most when the agent runs with permissions skipped, such as through the Telegram proxy where no human is present to approve or deny tool calls. Without a sandbox, an agent could write to <code>~/.ssh/authorized_keys</code>, drop a launch agent that runs on boot, modify shell profiles to inject commands, or edit system configuration files. None of these would trigger a permission prompt because permissions are bypassed. The sandbox catches them at the hook level instead.</p>
+<p>The sandbox checks every resolved file path against an allowlist and a blocklist. The blocklist takes priority. Paths on the blocklist are always blocked, even if they fall inside an allowed directory. Paths not on either list are blocked if they fall outside all allowed directories.</p>
+<p>Blocked paths include home directory dotfiles (<code>~/.zshrc</code>, <code>~/.bashrc</code>, <code>~/.gitconfig</code>, <code>~/.ssh/</code>), macOS application support directories (<code>~/Library/LaunchAgents/</code>, <code>~/Library/LaunchDaemons/</code>), and system directories (<code>/etc/</code>, <code>/usr/</code>, <code>/bin/</code>, <code>/sbin/</code>, <code>/System/</code>, <code>/Library/</code>, <code>/var/</code>, <code>/opt/</code>).</p>
+<p>The sandbox applies to both direct file writes (Edit, Write) and Bash commands that target paths outside the allowed zone. The same command parsing that catches protected file bypasses also catches sandbox violations. An agent that tries <code>echo "bad" &gt;&gt; ~/.zshrc</code> through a Bash tool gets blocked the same way as one that tries to Edit the file directly.</p>
+<p>A sandbox violation produces a hard block (exit code 2), a JSONL audit log entry, and a Telegram alert with the full resolved path. The alert tells the operator exactly what the agent tried to reach and which session attempted it.</p>
 <h2 id="deny-list">Deny list<a class="headerlink" href="#deny-list" title="Permanent link">&para;</a></h2>
 <p>The repo-level <code>.claude/settings.json</code> carries a permission deny list. It blocks commands that are destructive, history-rewriting, or common vectors for accidental damage.</p>
 <p>Blocked categories:</p>
