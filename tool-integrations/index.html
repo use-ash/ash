@@ -755,10 +755,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mcp-and-memory-access" class="md-nav__link">
+  <a href="#memory-access-patterns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MCP and memory access
+        Memory access patterns
       
     </span>
   </a>
@@ -925,10 +925,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mcp-and-memory-access" class="md-nav__link">
+  <a href="#memory-access-patterns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MCP and memory access
+        Memory access patterns
       
     </span>
   </a>
@@ -955,23 +955,23 @@
 <h1 id="tool-integrations">Tool Integrations<a class="headerlink" href="#tool-integrations" title="Permanent link">&para;</a></h1>
 <h2 id="execution-surfaces">Execution surfaces<a class="headerlink" href="#execution-surfaces" title="Permanent link">&para;</a></h2>
 <p>The harness talks to external services through plain REST APIs.</p>
-<p>One external API is the main structured data surface for time series and domain-specific signals. Another handles execution in a sandbox path. That split reflects a lesson learned in production: execution and data do not need to come from the same place.</p>
-<p>Both integrations look for credentials in <code>~/.openclaw/.env</code> first. On macOS, they can fall back to the Keychain when the environment file is missing or the cron environment is thin. The scripts do not fail in silence. They print a detectable error string such as <code>ERROR: execution API key not found</code> or <code>ERROR: external service credentials missing</code>, then exit nonzero so the caller can see that auth failed and act on it.</p>
+<p>One API handles structured data — time series, domain signals, and reference information. Another handles execution in a sandboxed environment. That split reflects a lesson learned in production: execution and data do not need to come from the same place, and separating them limits blast radius when one service has issues.</p>
+<p>Both integrations follow the same credential pattern. The system checks an environment file first, then falls back to the OS keychain when the environment is thin (common in cron). Scripts do not fail in silence. They print a detectable error string and exit nonzero so the caller knows auth failed and can act on it.</p>
 <h2 id="signal-and-data-inputs">Signal and data inputs<a class="headerlink" href="#signal-and-data-inputs" title="Permanent link">&para;</a></h2>
-<p>An external signal provider feeds one of the main automated workflows. The harness does not drive it through a browser in production. A dedicated API client talks to the site through its AJAX endpoints with cookie-based authentication. Cookies come from the Apple SSO login flow and need refresh when they expire. That makes the provider useful, but also one that needs operational care.</p>
-<p>X is another input, but not a trusted one. The harness uses <code>fetch_x.py</code> instead of generic web fetch tools. With the <code>--sanitize</code> flag, that script routes the content through the local content filter before the rest of the system sees it.</p>
-<p>YouTube fills a different role. The system uses <code>youtube_transcript_api</code> to pull transcripts for research and review work, then treats that text as outside content in the same way it treats anything else from the internet.</p>
+<p>An external signal provider feeds one of the main automated workflows. The harness talks to it through its API with cookie-based authentication. Cookies need periodic refresh. That makes the provider useful but operationally fragile — it needs monitoring and re-auth when sessions expire.</p>
+<p>Social media content is another input, but not a trusted one. The harness routes it through a local content filter before the rest of the system sees it. The filter runs on a sandboxed local model with no tools, so prompt injection in the content cannot escalate into actions.</p>
+<p>Video transcripts fill a research role. The system pulls them for review work, then treats the text as external content with the same trust level as anything else from the internet.</p>
 <h2 id="human-interface">Human interface<a class="headerlink" href="#human-interface" title="Permanent link">&para;</a></h2>
 <p>Telegram is the human-facing shell around the harness.</p>
-<p>The system uses three bots with separate roles. The alerts bot pushes one-way notifications. The chat bot carries two-way conversation with the Claude bridge. The gateway bot handles OpenClaw traffic. That split did not exist at the start. It arrived after the operator hit the limits of one bot trying to handle alerts, chat, and gateway traffic at once.</p>
-<p>One shared sender utility handles Telegram delivery. More than 30 scripts route notifications through that one utility now, which means formatting, auth lookup, and error handling live in one place instead of thirty.</p>
+<p>The system uses three bots with separate roles. One pushes one-way alerts. One carries two-way conversation with the Claude bridge. One handles gateway traffic. That split did not exist at the start. It arrived after the operator hit the limits of a single bot trying to handle alerts, chat, and agent messages at once.</p>
+<p>A shared sender utility handles delivery for all notification paths. More than 30 scripts route through that one utility, which means formatting, credential lookup, and error handling live in one place instead of thirty.</p>
 <h2 id="skills-system">Skills system<a class="headerlink" href="#skills-system" title="Permanent link">&para;</a></h2>
-<p>The harness packages reusable capabilities as skill directories. Each skill has a <code>SKILL.md</code> file that defines when to use it and how to run it. Most also carry a <code>feedback.log</code> file plus supporting scripts. That structure turns a one-off instruction into a reusable tool.</p>
-<p>The pattern matters more than any single skill. Codex dispatch, Grok research, repo evaluation, transcript search, and content filtering all use the same shape. Before a skill runs, it reads its own <code>feedback.log</code>. That means corrections from prior sessions do not vanish into chat history. They become part of the tool.</p>
-<h2 id="mcp-and-memory-access">MCP and memory access<a class="headerlink" href="#mcp-and-memory-access" title="Permanent link">&para;</a></h2>
-<p>The memory system follows the same high-level idea as Nate B. Jones' Open Brain: persistent state exposed through a standard access pattern instead of hidden in a live chat. The implementation chooses files over SQL.</p>
+<p>The harness packages reusable capabilities as skill directories. Each skill has a definition file that describes when to use it and how to run it. Most also carry a feedback log and supporting scripts. That structure turns a one-off instruction into a reusable tool.</p>
+<p>The pattern matters more than any single skill. Code dispatch, web research, repo evaluation, transcript search, and content filtering all use the same shape. Before a skill runs, it reads its own feedback log. Corrections from prior sessions do not vanish into chat history. They become part of the tool.</p>
+<h2 id="memory-access-patterns">Memory access patterns<a class="headerlink" href="#memory-access-patterns" title="Permanent link">&para;</a></h2>
+<p>The memory system follows the same high-level idea as Nate B. Jones' Open Brain: persistent state exposed through a standard access pattern instead of hidden in a live chat. The implementation here uses files instead of SQL.</p>
 <p>That tradeoff buys simplicity. A file-based store is easy to inspect, back up, diff, and repair by hand. It avoids a database dependency and keeps the control plane easy to restart.</p>
-<p>The cost is search quality. Files do not give semantic lookup on their own. The harness needs an indexing or retrieval layer on top if it wants more than file names and keyword search. That is the price of staying simple at the storage layer.</p>
+<p>The cost is search quality. Files do not support semantic lookup on their own. The harness needs an indexing or retrieval layer on top for anything beyond file names and keyword matching. That is the price of staying simple at the storage layer.</p>
 
 
 
