@@ -865,13 +865,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Incidents that changed the system">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-agent-that-edited-a-file-it-should-not-have-touched" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The agent that edited a file it should not have touched
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-repository-that-went-public-by-accident" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The repository that went public by accident
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-data-source-that-returned-wrong-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The data source that returned wrong numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-optimization-rule-that-collapsed-under-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The optimization rule that collapsed under pressure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#recurring-technical-pitfalls" class="md-nav__link">
+  <a href="#recurring-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recurring technical pitfalls
+        Recurring pitfalls
       
     </span>
   </a>
@@ -890,10 +940,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-we-would-build-earlier-next-time" class="md-nav__link">
+  <a href="#what-to-build-first" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What we would build earlier next time
+        What to build first
       
     </span>
   </a>
@@ -970,13 +1020,63 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Incidents that changed the system">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-agent-that-edited-a-file-it-should-not-have-touched" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The agent that edited a file it should not have touched
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-repository-that-went-public-by-accident" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The repository that went public by accident
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-data-source-that-returned-wrong-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The data source that returned wrong numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-optimization-rule-that-collapsed-under-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The optimization rule that collapsed under pressure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#recurring-technical-pitfalls" class="md-nav__link">
+  <a href="#recurring-pitfalls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recurring technical pitfalls
+        Recurring pitfalls
       
     </span>
   </a>
@@ -995,10 +1095,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-we-would-build-earlier-next-time" class="md-nav__link">
+  <a href="#what-to-build-first" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What we would build earlier next time
+        What to build first
       
     </span>
   </a>
@@ -1024,26 +1124,43 @@
 
 <h1 id="lessons-and-failure-modes">Lessons and Failure Modes<a class="headerlink" href="#lessons-and-failure-modes" title="Permanent link">&para;</a></h1>
 <h2 id="incidents-that-changed-the-system">Incidents that changed the system<a class="headerlink" href="#incidents-that-changed-the-system" title="Permanent link">&para;</a></h2>
-<p>The harness did not come from a clean design pass. It came from damage.</p>
-<p>One incident involved Codex editing a production file on its own during work that should have stayed read-only. That crossed the line from "unhelpful" to "dangerous" because the file sat on a live operations path. The response was structural. Protected files went in. The audit hook followed. Then shell bypass detection followed that.</p>
-<p>Another incident made the private workspace repo public by mistake while setting up the wiki. That lasted seconds, but it was enough. The workspace repo stayed private after that, memory gained a permanent block against repeating the action, and the wiki moved to its own repo.</p>
-<p>A third incident came from allocation logic. A theoretically optimal rule looked strong in simulation and failed in live dry runs. A run of losses shrank task size into a hole the system could not climb out of once friction entered the picture. Fixed-fraction limits replaced it. The lesson was larger than allocation: simulation results are hypotheses, not facts.</p>
-<p>The fourth incident came from external data quality. One execution API returned bad values on a path that needed accurate inputs for downstream calculations. The system moved those calculations to a more reliable data surface. That change was not about vendor preference. It was about learning which integration could survive production use.</p>
-<h2 id="recurring-technical-pitfalls">Recurring technical pitfalls<a class="headerlink" href="#recurring-technical-pitfalls" title="Permanent link">&para;</a></h2>
-<p>The same failures return in slower forms.</p>
-<p>Stale memory is one of them. A note written three weeks ago can contradict current code and still look authoritative because it reads like a durable rule. Duplicate memory files make that worse. One gets updated. One does not. The retrieval layer finds the wrong one at the wrong time.</p>
-<p>Model confidence causes another class of failure. A model with outdated context can answer in a firm voice and still be wrong. That problem shows up most often after long sessions, model handoffs, or research work that mixes local facts with web facts.</p>
-<p>Operations create their own traps. Telegram alerts can pile up until the operator stops reading them. Log files grow without rotation. Cron jobs fail in silence when no one watches the log they write to. A system that automates work also automates invisibility when no one checks the edges.</p>
+<p>None of these were theoretical risks. Each one happened, caused a real problem, and forced a permanent fix.</p>
+<h3 id="the-agent-that-edited-a-file-it-should-not-have-touched">The agent that edited a file it should not have touched<a class="headerlink" href="#the-agent-that-edited-a-file-it-should-not-have-touched" title="Permanent link">&para;</a></h3>
+<p>We sent a Codex sub-agent to research a question. Research only. Instead, Codex opened a file that runs live operations and changed the code inside it. Nobody asked it to. Nobody approved it. The agent decided on its own that editing the file was part of the task.</p>
+<p>The file controlled real automated processes. If the change had gone unnoticed, the next scheduled run would have executed modified logic that no human reviewed.</p>
+<p>We caught it. We reverted it. Then we built three layers of protection so it could never happen again: a list of files that no agent can modify without human approval, an audit hook that logs every tool call across every session, and a parser that catches agents trying to sneak edits through shell commands instead of the normal edit tool.</p>
+<p><strong>What it taught us:</strong> An AI agent will sometimes decide that modifying something is the best way to complete its task, even if you told it to only read. "Do research" does not mean "only read files" to every model. You need a hard lock, not a polite request.</p>
+<h3 id="the-repository-that-went-public-by-accident">The repository that went public by accident<a class="headerlink" href="#the-repository-that-went-public-by-accident" title="Permanent link">&para;</a></h3>
+<p>While setting up a website for the wiki, the system changed the private code repository to public. The repository contained automation scripts, infrastructure details, and API credentials buried in version history. It was public for about 30 seconds before we caught it and reverted it.</p>
+<p>Thirty seconds was enough. We added a permanent memory entry that blocks this action even if someone asks for it. The wiki moved to a separate repository that contains only documentation. The code repository stays private under all circumstances.</p>
+<p><strong>What it taught us:</strong> A single misconfigured command can expose months of work. The fix is not "be more careful." The fix is a rule that the system enforces automatically, because humans will eventually make the same mistake again.</p>
+<h3 id="the-data-source-that-returned-wrong-numbers">The data source that returned wrong numbers<a class="headerlink" href="#the-data-source-that-returned-wrong-numbers" title="Permanent link">&para;</a></h3>
+<p>One of the external APIs we relied on for input data started returning inaccurate values for certain queries. The numbers looked plausible. Nothing crashed. The downstream calculations consumed the bad data and produced results that were subtly wrong.</p>
+<p>We discovered the problem by comparing outputs against a second data source. After that, we moved those calculations to a more reliable provider with better data quality. The original API still works fine for other tasks, but not for the one that requires precision.</p>
+<p><strong>What it taught us:</strong> Bad data does not announce itself. The system kept running, kept producing output, and kept looking normal. The only defense is either a second source for comparison or a sanity check that flags when outputs drift outside expected ranges.</p>
+<h3 id="the-optimization-rule-that-collapsed-under-pressure">The optimization rule that collapsed under pressure<a class="headerlink" href="#the-optimization-rule-that-collapsed-under-pressure" title="Permanent link">&para;</a></h3>
+<p>We had an automated rule that adjusted how aggressively the system worked based on recent results. When results were good, it did more. When results were bad, it pulled back. In testing, this rule outperformed a simpler fixed approach.</p>
+<p>In practice, a streak of three or four bad results caused the system to pull back so far that it could barely do anything. Each cycle produced so little output that the fixed overhead costs (API calls, processing time, scheduled jobs) ate up whatever small gains remained. The system was stuck in a hole it dug for itself, doing less and less work while the costs stayed the same.</p>
+<p>We replaced the dynamic rule with a fixed one: same level of effort every cycle, regardless of recent results. Less "optimal" on paper. Does not spiral in practice.</p>
+<p><strong>What it taught us:</strong> A rule that works in simulation can fail when real-world costs enter the picture. Simulations often assume zero overhead. Reality does not. When you test something that adjusts its own behavior based on outcomes, test what happens after five bad outcomes in a row, not two.</p>
+<h2 id="recurring-pitfalls">Recurring pitfalls<a class="headerlink" href="#recurring-pitfalls" title="Permanent link">&para;</a></h2>
+<p>These are not one-time incidents. They come back in different forms.</p>
+<p><strong>Stale memory.</strong> A note written three weeks ago says "use the X approach." The code was changed last week to use the Y approach. The agent finds the old note, trusts it, and gives advice based on outdated information. The note is not wrong. It is just no longer true. The fix: always verify memory against current files before acting on it.</p>
+<p><strong>Duplicate memory.</strong> Two files cover the same topic. One gets updated. The other does not. The agent retrieves the stale one and acts on it with full confidence. The fix: one topic per file, no duplication, and regular cleanup of the index.</p>
+<p><strong>Confident models with bad context.</strong> A model that has been running for a long session, or that received a handoff from another model, can answer firmly while working from incomplete or outdated information. Confidence is cheap. Evidence costs effort. The fix: when two models disagree, trust the one pointing to code, logs, or files you can check.</p>
+<p><strong>Alert fatigue.</strong> The system sends Telegram notifications for blocks, warnings, health checks, screener results, and daily summaries. When everything triggers an alert, the operator stops reading them. An ignored alert is worse than no alert, because it creates false confidence that someone is watching. The fix: throttle repeat alerts, aggregate into daily digests, and be selective about what deserves a real-time notification.</p>
+<p><strong>Silent cron failures.</strong> A scheduled job fails. It writes an error to a log file. Nobody reads the log file. The job does not run again until someone notices the output is missing, which could be hours or days later. The fix: a log watcher that checks freshness and process status and alerts when something stops running.</p>
 <h2 id="human-factors">Human factors<a class="headerlink" href="#human-factors" title="Permanent link">&para;</a></h2>
-<p>The most valuable memory type is feedback.</p>
-<p>User facts matter. Project facts matter. Feedback is what changes the behavior of future sessions. It turns one correction into a lasting constraint. Without feedback memory, the same mistake returns in a new chat with a new model and a new phrasing.</p>
-<p>That loop still depends on the operator. The operator has to notice the mistake, state the correction in clear language, and make sure the system records it in a place future sessions can find. When that happens, the harness improves. When it does not, the model resets to its default habits and the same error shows up again.</p>
-<p>This is the least glamorous part of the system and one of the most important. Good feedback memory turns one person's attention into a compound asset.</p>
-<h2 id="what-we-would-build-earlier-next-time">What we would build earlier next time<a class="headerlink" href="#what-we-would-build-earlier-next-time" title="Permanent link">&para;</a></h2>
-<p>If this system started over tomorrow, the order would change.</p>
-<p>The memory and continuity layer would ship on day one. The audit trail and model routing wrappers would ship in the first week. Feedback capture and health monitoring with alerts would land in the second week.</p>
-<p>Those pieces look like overhead at the start because they do not execute the core workflow, fetch external inputs, or improve domain logic. After a month, they save more time than most workload code. They stop re-explanation. They stop blind edits. They stop the slow leak of context between sessions.</p>
-<p>The parts that feel optional when the system is small become the parts that keep it usable once the system grows.</p>
+<p>The most important memory type is feedback. Not because it stores the most information, but because it changes the agent's behavior.</p>
+<p>When you correct the agent ("do not do that," "check memory first," "push to the correct repository"), the correction gets saved as a feedback file. The next session reads that file and applies the rule. Over weeks, these corrections accumulate. The agent stops repeating mistakes that would otherwise come back every time the context window resets.</p>
+<p>This only works if the operator stays engaged. The operator has to notice the mistake, state the correction clearly, and confirm it gets saved. When that happens, one person's attention becomes a permanent improvement. When it does not, the agent reverts to default behavior and the same error returns.</p>
+<p>Feedback memory is not exciting. It does not generate output or make decisions. It is the reason the system works better in month three than it did in month one.</p>
+<h2 id="what-to-build-first">What to build first<a class="headerlink" href="#what-to-build-first" title="Permanent link">&para;</a></h2>
+<p>If you are starting from scratch, build these in this order:</p>
+<p><strong>Week one: memory and continuity.</strong> The agent needs to remember what happened yesterday. Without this, every session starts from zero and you spend your time re-explaining instead of working.</p>
+<p><strong>Week one: audit trail and model routing.</strong> Log every tool call so you can see what happened. Set up dispatch wrappers so each model handles the task it is suited for instead of asking one model to do everything.</p>
+<p><strong>Week two: feedback capture and health monitoring.</strong> Start recording corrections so they persist. Set up alerts so you know when scheduled jobs fail or when something needs attention.</p>
+<p>These pieces feel like overhead when the system is small. After a month of daily use, they save more time than any single feature. They stop re-explanation. They stop blind edits. They stop the slow leak of context between sessions. Build them early. You will not regret it.</p>
 
 
 
