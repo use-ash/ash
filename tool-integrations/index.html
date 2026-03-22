@@ -971,7 +971,7 @@
 <h2 id="memory-access-patterns">Memory access patterns<a class="headerlink" href="#memory-access-patterns" title="Permanent link">&para;</a></h2>
 <p>The memory system follows the same high-level idea as Nate B. Jones' Open Brain: persistent state exposed through a standard access pattern instead of hidden in a live chat. The implementation here uses files instead of SQL.</p>
 <p>That tradeoff buys simplicity. A file-based store is easy to inspect, back up, diff, and repair by hand. It avoids a database dependency and keeps the control plane easy to restart.</p>
-<p>The cost is search quality. Files do not support semantic lookup on their own. The harness needs an indexing or retrieval layer on top for anything beyond file names and keyword matching. That is the price of staying simple at the storage layer.</p>
+<p>The initial cost was search quality. Files do not support semantic lookup on their own. The harness addressed this by adding an embedding layer on top of the file store. A cloud embedding model indexes all memory files and enables semantic retrieval, so agents can find relevant context by meaning rather than just file names and keywords. That combination gives the system the simplicity of files with search quality closer to a vector database.</p>
 
 
 
