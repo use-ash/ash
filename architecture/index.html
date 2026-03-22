@@ -1119,7 +1119,7 @@
 <h2 id="design-principles">Design principles<a class="headerlink" href="#design-principles" title="Permanent link">&para;</a></h2>
 <p>Four rules that shaped every decision in the harness:</p>
 <p><strong>Recoverability over cleverness.</strong> The system should be easy to restart, easy to debug, and easy to understand after a crash. Files over databases. JSON over binary formats. Explicit state over inferred state.</p>
-<p><strong>Explicit files over hidden state.</strong> If a fact matters, it goes in a file with a name that describes what it contains. No relying on model memory, conversation history, or "the agent just knows."</p>
+<p><strong>Explicit files over hidden state.</strong> If a fact matters, it goes in a file with a name that describes what it contains. No relying on model memory, conversation history, or assumptions that the agent already knows.</p>
 <p><strong>Fail-open on infrastructure, fail-closed on safety.</strong> If the audit hook crashes, the tool call still executes. The session does not die because a logging script had a bug. But if a write targets a protected file, the action is blocked regardless of context.</p>
 <p><strong>Skip bureaucracy, not evidence.</strong> The development pipeline has stages for a reason. A quick fix does not need a full planning phase. But every code change needs verification (did it compile, did it run) and review (did it touch anything unexpected). Speed changes. Evidence requirements do not.</p>
 

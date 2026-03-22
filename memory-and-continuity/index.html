@@ -1078,7 +1078,7 @@
 <p>That handoff removes the usual reset between sessions. The operator does not need to restate what was in progress, which channel it came from, or what the next action should be. The context is already in files.</p>
 <h2 id="thread-continuity">Thread continuity<a class="headerlink" href="#thread-continuity" title="Permanent link">&para;</a></h2>
 <p><code>conversation_state.json</code> is the thread ledger. It tracks active and closed threads, with fields for title, status, summary, next steps, channels seen, and timestamps such as <code>opened_at</code> and <code>last_activity</code>. The file also stores session-wide context such as the last model and the last session notes.</p>
-<p>This file survives more than one boundary. It survives a new Claude session. It survives a handoff from webchat to Telegram. It survives model changes, because the state lives outside the model. That is the core point. The system does not depend on a single context window staying alive.</p>
+<p>This file survives session restarts, channel switches (webchat to Telegram), and model changes. The state lives outside the model, so the system never depends on a single context window staying alive.</p>
 <p>The file also gives the operator a clean answer to a hard question: what is still open? Without that ledger, half-finished work disappears into chat history.</p>
 <h2 id="feedback-how-the-agent-improves-over-time">Feedback: how the agent improves over time<a class="headerlink" href="#feedback-how-the-agent-improves-over-time" title="Permanent link">&para;</a></h2>
 <p>Feedback is the most valuable memory type. Every other type describes the world. Feedback changes the agent's behavior.</p>
@@ -1087,10 +1087,10 @@
 <p>Skills have their own feedback mechanism. Each skill directory can include a <code>feedback.log</code> file. The skill reads that log before every execution and applies all entries. During execution, new corrections get appended. This keeps skill-level lessons close to the skill itself instead of buried in the general memory index.</p>
 <p>Examples of feedback that changed behavior:</p>
 <ul>
-<li>"Never make the workspace repository public" — saved after a 30-second accidental exposure, now blocks the action even if the operator requests it</li>
-<li>"Check memory before asking the user" — saved after the agent asked the operator for information that was already in memory</li>
-<li>"Push changes to the dedicated repo, not just the workspace copy" — saved after a fix was committed to the wrong repository</li>
-<li>"MkDocs serve does not auto-reload" — saved after the operator corrected this multiple times in the same session</li>
+<li>"Never make the workspace repository public." Saved after a 30-second accidental exposure. Now blocks the action even if the operator requests it.</li>
+<li>"Check memory before asking the user." Saved after the agent asked for information that was already stored.</li>
+<li>"Push changes to the dedicated repo, not the workspace copy." Saved after a fix went to the wrong repository.</li>
+<li>"The wiki server does not auto-reload." Saved after the operator corrected this multiple times in one session.</li>
 </ul>
 <p>Without feedback memory, these corrections evaporate between sessions. The agent makes the same mistake on Tuesday that it made on Monday. With feedback memory, the correction persists and the mistake stops recurring. That compounding effect is the single biggest quality improvement in the entire harness.</p>
 <h2 id="writing-good-memory">Writing good memory<a class="headerlink" href="#writing-good-memory" title="Permanent link">&para;</a></h2>
