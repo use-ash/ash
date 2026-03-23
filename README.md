@@ -209,6 +209,9 @@ ASH never sees conversation content, system prompts, or user messages. It only r
 
 ## License
 
-MIT. Use it, fork it, embed it.
+[Elastic License 2.0](LICENSE) — free to use, self-host, modify, and embed in your own products.
 
-Hosted service and enterprise support at [use-ash.com](https://use-ash.com).
+**The one restriction:** you may not offer ASH as a hosted or managed service to third parties.
+That's what [use-ash.com](https://use-ash.com) is for.
+
+Enterprise support and hosted service at [use-ash.com](https://use-ash.com).
