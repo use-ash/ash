@@ -42,8 +42,8 @@ VAULT = {
     "db_host":        "prod-pg-primary.internal.company.com",
     "db_user":        "app_prod_user",
     "redis_url":      "redis://:rJt7#nXp3@prod-redis.internal.company.com:6379/0",
-    "stripe_api_key": "sk_live_DEMO_NOT_REAL_KEY_ash_example_only_1234",
-    "stripe_webhook": "whsec_DEMO_NOT_REAL_WEBHOOK_ash_example_only_5678",
+    "stripe_api_key": "sk_live_51NxKp2LkZbY8eQ3mH7vT9wA2cD4fG6hJ8lM0nP2qR",
+    "stripe_webhook": "whsec_kL9mN3pQ7rS1tU5vW8xY2zA4bC6dE0fG",
 }
 
 TOOLS = [

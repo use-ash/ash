@@ -44,14 +44,29 @@ Install:
 
 from __future__ import annotations
 
+import contextvars
 import hashlib
 import json
 import os
 import re
+import sys
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from fastmcp import FastMCP
+
+# Service layer (Phase 4) — optional, degrades gracefully in OSS mode
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "service"))
+try:
+    from ash_service_layer import validate_api_key, write_audit_event, fire_webhook  # type: ignore
+    _SERVICE_AVAILABLE = True
+except ImportError:
+    _SERVICE_AVAILABLE = False
+
+# Per-request tenant context (set by auth middleware, None in OSS mode)
+_TENANT_CTX: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
+    "ash_memory_tenant", default=None
+)
 
 # ---------------------------------------------------------------------------
 # Config loader — reads ~/.ash/config.json or ASH_CONFIG env var
@@ -151,6 +166,13 @@ def _log(op: str, key: str, result: str, detail: str = "") -> None:
             pass
     if _LOG_STDOUT:
         print(json.dumps(entry), flush=True)
+
+    # Hosted service: persist to Firestore + fire webhook if tenant on request
+    if _SERVICE_AVAILABLE:
+        tenant = _TENANT_CTX.get()
+        if tenant:
+            write_audit_event(tenant["tenant_id"], entry)
+            fire_webhook(tenant, entry)
 
 
 # ---------------------------------------------------------------------------
@@ -703,10 +725,64 @@ def memory_audit_resource() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Entry point — with optional API key auth middleware
 # ---------------------------------------------------------------------------
+def _run_with_auth(port: int) -> None:
+    """Start the SSE server with Starlette auth middleware.
+
+    Requests with a valid X-ASH-Key header get Firestore audit persistence.
+    Requests with no key work in OSS mode (in-memory only).
+    Requests with an invalid key are rejected 401.
+    """
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route, Mount
+    from mcp.server.sse import SseServerTransport
+
+    class ASHAuthMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            raw_key = request.headers.get("X-ASH-Key", "")
+            if raw_key:
+                if not _SERVICE_AVAILABLE:
+                    return JSONResponse(
+                        {"error": "Service layer not available"},
+                        status_code=503,
+                    )
+                tenant = validate_api_key(raw_key)
+                if tenant is None:
+                    return JSONResponse({"error": "Invalid API key"}, status_code=401)
+                token = _TENANT_CTX.set(tenant)
+                try:
+                    return await call_next(request)
+                finally:
+                    _TENANT_CTX.reset(token)
+            # No key — OSS mode, pass through
+            return await call_next(request)
+
+    sse = SseServerTransport("/messages/")
+
+    async def handle_sse(request):
+        async with sse.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams:
+            await mcp._mcp_server.run(
+                streams[0],
+                streams[1],
+                mcp._mcp_server.create_initialization_options(),
+            )
+
+    app = Starlette(
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages/", app=sse.handle_post_message),
+        ],
+    )
+    app.add_middleware(ASHAuthMiddleware)
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 8001))
-    mcp.settings.port = port
-    mcp.run(transport="sse")
+    _run_with_auth(port)
