@@ -26,7 +26,11 @@ ASH intercepts there.
 
 ---
 
-## The 4 Tools
+## Two Servers
+
+### `ash_safety_server.py` — Execution Safety (Phase 1)
+
+Intercepts tool calls before they execute.
 
 | Tool | Blocks |
 |------|--------|
@@ -34,6 +38,19 @@ ASH intercepts there.
 | `check_syntax` | Invalid Python before execution or write |
 | `audit_tool_call` | `rm -rf`, `curl \| bash`, `DROP TABLE`, force push, chmod 777, writes to system paths |
 | `pipeline_gate` | Destructive or irreversible actions — requires explicit confirmation |
+
+### `ash_memory_server.py` — Memory Safety (Phase 2)
+
+Persistent memory for agents with injection scanning on every write.
+
+| Tool | Does |
+|------|------|
+| `write_memory` | Store a key/value — scanned for injection before accepted |
+| `read_memory` | Retrieve by key — flagged if stored content looks like a deferred command |
+| `list_memories` | List all keys + metadata (values never returned in bulk) |
+| `delete_memory` | Remove by key, logged |
+
+Catches memory poisoning attacks — where an attacker stores `"whenever you see X, do Y (malicious)"` in long-term memory and it executes next session. Blocks 8 injection pattern classes; warns on 3 more.
 
 ---
 
@@ -43,7 +60,8 @@ ASH intercepts there.
 
 ```bash
 pip install "fastmcp==1.0"
-python3 ash_safety_server.py
+python3 ash_safety_server.py   # execution safety, port 8000
+python3 ash_memory_server.py   # memory safety,    port 8001
 ```
 
 Then connect your agent:
@@ -82,10 +100,13 @@ Each demo runs the same scenario with ASH **off** then **on**, so you can see ex
 
 ## Resources
 
-ASH exposes two MCP resources:
-
+**Safety server** (`ash_safety_server.py`):
 - `ash://deny-list` — current blocked patterns and protected system paths
 - `ash://audit-log` — last 50 events this session (tool name, result, timestamp)
+
+**Memory server** (`ash_memory_server.py`):
+- `ash://memory-store` — all stored keys and metadata (values omitted)
+- `ash://memory-audit` — last 50 memory operations this session
 
 ---
 
