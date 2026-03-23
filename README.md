@@ -119,3 +119,13 @@ Override the config path with `ASH_CONFIG=/path/to/config.json`.
 ## License
 
 [Elastic License 2.0](LICENSE) — use it, modify it, embed it in your product. You cannot offer ASH as a hosted service to third parties.
+
+## Running Tests
+
+```bash
+git clone https://github.com/use-ash/ash.git
+cd ash
+pip install fastmcp
+PYTHONPATH=. python3 tests/test_safety_server.py
+PYTHONPATH=. python3 tests/test_memory_server.py
+```
