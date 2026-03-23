@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ASH Tool Registry Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "author",
+    "version",
+    "description",
+    "mcp_server",
+    "permissions",
+    "trust",
+    "ash_policy",
+    "install"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "author": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "mcp_server": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "args",
+        "env"
+      ],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "required",
+              "optional"
+            ]
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "network",
+        "filesystem",
+        "env_vars",
+        "shell"
+      ],
+      "properties": {
+        "network": {
+          "type": "boolean"
+        },
+        "filesystem": {
+          "type": "boolean"
+        },
+        "env_vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shell": {
+          "type": "boolean"
+        }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "vetted_by",
+        "vetted_at",
+        "findings"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "vetted_by": {
+          "type": "string"
+        },
+        "vetted_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ash_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scan_inputs",
+        "scan_outputs",
+        "audit_all",
+        "block_patterns"
+      ],
+      "properties": {
+        "scan_inputs": {
+          "type": "boolean",
+          "default": true
+        },
+        "scan_outputs": {
+          "type": "boolean",
+          "default": true
+        },
+        "audit_all": {
+          "type": "boolean",
+          "default": true
+        },
+        "block_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pip",
+        "npm",
+        "source"
+      ],
+      "properties": {
+        "pip": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "npm": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}

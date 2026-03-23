@@ -1,0 +1,245 @@
+{
+  "registry": {
+    "name": "ash-tools",
+    "version": "0.1.0",
+    "description": "ASH Tool Registry"
+  },
+  "tools": [
+    {
+      "name": "file-search",
+      "author": "ash-team",
+      "version": "1.0.0",
+      "description": "Glob and grep file search with read-only filesystem access.",
+      "mcp_server": {
+        "command": "/opt/homebrew/bin/python3",
+        "args": [
+          "servers/file_search_server.py"
+        ],
+        "env": {}
+      },
+      "permissions": {
+        "network": false,
+        "filesystem": true,
+        "env_vars": [],
+        "shell": false
+      },
+      "trust": {
+        "score": 95,
+        "vetted_by": "ash-team",
+        "vetted_at": "2026-03-23",
+        "findings": [
+          "Read-only filesystem access for glob and content search.",
+          "No network access.",
+          "No shell execution."
+        ]
+      },
+      "ash_policy": {
+        "scan_inputs": true,
+        "scan_outputs": true,
+        "audit_all": true,
+        "block_patterns": []
+      },
+      "install": {
+        "pip": [
+          "fastmcp"
+        ],
+        "npm": [],
+        "source": "https://github.com/drm-collab/ash-tools/tree/main/servers/file_search_server.py"
+      }
+    },
+    {
+      "name": "web-fetch",
+      "author": "ash-team",
+      "version": "1.0.0",
+      "description": "Fetch URLs and extract content from remote responses.",
+      "mcp_server": {
+        "command": "/opt/homebrew/bin/python3",
+        "args": [
+          "servers/web_fetch_server.py"
+        ],
+        "env": {}
+      },
+      "permissions": {
+        "network": true,
+        "filesystem": false,
+        "env_vars": [],
+        "shell": false
+      },
+      "trust": {
+        "score": 70,
+        "vetted_by": "ash-team",
+        "vetted_at": "2026-03-23",
+        "findings": [
+          "Performs outbound HTTP requests.",
+          "Parses remote content returned by arbitrary URLs.",
+          "No shell execution."
+        ]
+      },
+      "ash_policy": {
+        "scan_inputs": true,
+        "scan_outputs": true,
+        "audit_all": true,
+        "block_patterns": [
+          "file://",
+          "data:text/html"
+        ]
+      },
+      "install": {
+        "pip": [
+          "fastmcp",
+          "requests"
+        ],
+        "npm": [],
+        "source": "https://github.com/drm-collab/ash-tools/tree/main/servers/web_fetch_server.py"
+      }
+    },
+    {
+      "name": "github-issues",
+      "author": "ash-team",
+      "version": "1.0.0",
+      "description": "Read and write GitHub issues through the GitHub API.",
+      "mcp_server": {
+        "command": "/opt/homebrew/bin/python3",
+        "args": [
+          "servers/github_issues_server.py"
+        ],
+        "env": {
+          "GITHUB_TOKEN": "required"
+        }
+      },
+      "permissions": {
+        "network": true,
+        "filesystem": false,
+        "env_vars": [
+          "GITHUB_TOKEN"
+        ],
+        "shell": false
+      },
+      "trust": {
+        "score": 75,
+        "vetted_by": "ash-team",
+        "vetted_at": "2026-03-23",
+        "findings": [
+          "Requires authenticated GitHub API access via GITHUB_TOKEN.",
+          "Performs outbound network requests to GitHub.",
+          "Can modify remote issue state and content."
+        ]
+      },
+      "ash_policy": {
+        "scan_inputs": true,
+        "scan_outputs": true,
+        "audit_all": true,
+        "block_patterns": []
+      },
+      "install": {
+        "pip": [
+          "fastmcp",
+          "pygithub"
+        ],
+        "npm": [],
+        "source": "https://github.com/drm-collab/ash-tools/tree/main/servers/github_issues_server.py"
+      }
+    },
+    {
+      "name": "slack-notify",
+      "author": "ash-team",
+      "version": "1.0.0",
+      "description": "Send Slack messages through an incoming webhook.",
+      "mcp_server": {
+        "command": "/opt/homebrew/bin/python3",
+        "args": [
+          "servers/slack_notify_server.py"
+        ],
+        "env": {
+          "SLACK_WEBHOOK_URL": "required"
+        }
+      },
+      "permissions": {
+        "network": true,
+        "filesystem": false,
+        "env_vars": [
+          "SLACK_WEBHOOK_URL"
+        ],
+        "shell": false
+      },
+      "trust": {
+        "score": 80,
+        "vetted_by": "ash-team",
+        "vetted_at": "2026-03-23",
+        "findings": [
+          "Requires SLACK_WEBHOOK_URL for outbound notifications.",
+          "Performs outbound network requests to Slack.",
+          "No shell execution."
+        ]
+      },
+      "ash_policy": {
+        "scan_inputs": true,
+        "scan_outputs": true,
+        "audit_all": true,
+        "block_patterns": []
+      },
+      "install": {
+        "pip": [
+          "fastmcp",
+          "requests"
+        ],
+        "npm": [],
+        "source": "https://github.com/drm-collab/ash-tools/tree/main/servers/slack_notify_server.py"
+      }
+    },
+    {
+      "name": "postgres-query",
+      "author": "ash-team",
+      "version": "1.0.0",
+      "description": "Run read-only SQL queries against PostgreSQL.",
+      "mcp_server": {
+        "command": "/opt/homebrew/bin/python3",
+        "args": [
+          "servers/postgres_query_server.py"
+        ],
+        "env": {
+          "DATABASE_URL": "required"
+        }
+      },
+      "permissions": {
+        "network": true,
+        "filesystem": false,
+        "env_vars": [
+          "DATABASE_URL"
+        ],
+        "shell": false
+      },
+      "trust": {
+        "score": 85,
+        "vetted_by": "ash-team",
+        "vetted_at": "2026-03-23",
+        "findings": [
+          "Requires DATABASE_URL to connect to PostgreSQL.",
+          "Performs outbound database network connections.",
+          "Restricted to read-only SQL usage."
+        ]
+      },
+      "ash_policy": {
+        "scan_inputs": true,
+        "scan_outputs": true,
+        "audit_all": true,
+        "block_patterns": [
+          "\\bDROP\\b",
+          "\\bTRUNCATE\\b",
+          "\\bDELETE\\b",
+          "\\bINSERT\\b",
+          "\\bUPDATE\\b",
+          "\\bALTER\\b"
+        ]
+      },
+      "install": {
+        "pip": [
+          "fastmcp",
+          "psycopg2"
+        ],
+        "npm": [],
+        "source": "https://github.com/drm-collab/ash-tools/tree/main/servers/postgres_query_server.py"
+      }
+    }
+  ]
+}

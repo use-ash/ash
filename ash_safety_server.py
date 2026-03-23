@@ -1,5 +1,5 @@
 #!/opt/homebrew/bin/python3
-"""ASH Safety MCP Server — Phase 1 Prototype
+"""ASH Safety MCP Server
 
 Four tools:
   scan_for_secrets  — detect API keys, tokens, passwords in text or diffs
@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 from fastmcp import FastMCP
@@ -36,10 +37,23 @@ from fastmcp import FastMCP
 # Service layer (Phase 4) — optional, degrades gracefully in OSS mode
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "service"))
 try:
-    from ash_service_layer import validate_api_key, write_audit_event, fire_webhook  # type: ignore
+    from ash_service_layer import (  # type: ignore
+        check_usage_limit,
+        fire_webhook,
+        increment_usage,
+        validate_api_key,
+        write_audit_event,
+    )
     _SERVICE_AVAILABLE = True
 except ImportError:
     _SERVICE_AVAILABLE = False
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "billing"))
+try:
+    from usage_reporter import queue_meter_event  # type: ignore
+except ImportError:
+    def queue_meter_event(_tenant_id: str) -> None:
+        return
 
 # Per-request tenant context (set by auth middleware, None in OSS mode)
 _TENANT_CTX: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
@@ -97,25 +111,45 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
+def _redact_for_log(details: dict) -> dict:
+    """Scrub secrets from log entry values before persisting."""
+    redacted = {}
+    for key, value in details.items():
+        if not isinstance(value, str):
+            redacted[key] = value
+            continue
+        scrubbed = value
+        for name, pattern in SECRET_PATTERNS:
+            for match in pattern.finditer(scrubbed):
+                matched = match.group(0)
+                if PLACEHOLDER_RE.search(matched):
+                    continue
+                scrubbed = scrubbed.replace(matched, f"[REDACTED:{name}]")
+        redacted[key] = scrubbed
+    return redacted
+
+
 def _log(tool: str, result: str, details: dict) -> None:
-    entry = {"ts": _now(), "server": "safety", "tool": tool, "result": result, **details}
+    safe_details = _redact_for_log(details)
+    entry = {"ts": _now(), "server": "safety", "tool": tool, "result": result, **safe_details}
     _AUDIT_LOG.append(entry)
     if len(_AUDIT_LOG) > 500:
         _AUDIT_LOG.pop(0)
 
     # File / stdout logging
-    if _LOG_LEVEL == "off":
-        return
-    if _LOG_LEVEL == "blocks_only" and result not in _BLOCK_RESULTS:
-        return
-    if _LOG_FILE:
-        try:
-            with open(_LOG_FILE, "a") as f:
-                f.write(json.dumps(entry) + "\n")
-        except Exception:
-            pass
-    if _LOG_STDOUT:
-        print(json.dumps(entry), flush=True)
+    should_write_local_log = (
+        _LOG_LEVEL != "off"
+        and not (_LOG_LEVEL == "blocks_only" and result not in _BLOCK_RESULTS)
+    )
+    if should_write_local_log:
+        if _LOG_FILE:
+            try:
+                with open(_LOG_FILE, "a") as f:
+                    f.write(json.dumps(entry) + "\n")
+            except Exception:
+                pass
+        if _LOG_STDOUT:
+            print(json.dumps(entry), flush=True)
 
     # Hosted service: persist to Firestore + fire webhook if tenant on request
     if _SERVICE_AVAILABLE:
@@ -123,14 +157,20 @@ def _log(tool: str, result: str, details: dict) -> None:
         if tenant:
             write_audit_event(tenant["tenant_id"], entry)
             fire_webhook(tenant, entry)
+            threading.Thread(
+                target=increment_usage,
+                args=(tenant["tenant_id"],),
+                daemon=True,
+            ).start()
+            queue_meter_event(tenant["tenant_id"])
 
 
 # ---------------------------------------------------------------------------
 # Secret patterns (self-contained — no workspace imports)
 # ---------------------------------------------------------------------------
 SECRET_PATTERNS: list[tuple[str, re.Pattern]] = [
-    ("Anthropic API Key",       re.compile(r"sk-ant-api\S{10,}")),
-    ("Anthropic OAuth",         re.compile(r"sk-ant-oat\S{10,}")),
+    ("Anthropic API Key",       re.compile(r"sk-ant-api\S{10,}")),  # openclaw: allow-secret-fixture
+    ("Anthropic OAuth",         re.compile(r"sk-ant-oat\S{10,}")),  # openclaw: allow-secret-fixture
     ("Telegram Bot Token",      re.compile(r"\b\d{8,10}:AA[A-Za-z0-9_-]{30,}\b")),
     ("GitHub PAT",              re.compile(r"ghp_[A-Za-z0-9]{36,}")),
     ("GitHub OAuth Token",      re.compile(r"gho_[A-Za-z0-9]{36,}")),
@@ -389,6 +429,13 @@ def _run_with_auth(port: int) -> None:
                 tenant = validate_api_key(raw_key)
                 if tenant is None:
                     return JSONResponse({"error": "Invalid API key"}, status_code=401)
+                if not check_usage_limit(tenant):
+                    return JSONResponse(
+                        {
+                            "error": "Monthly usage limit exceeded. Upgrade at https://use-ash.com/upgrade"
+                        },
+                        status_code=429,
+                    )
                 token = _TENANT_CTX.set(tenant)
                 try:
                     return await call_next(request)
