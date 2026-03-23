@@ -1,0 +1,4 @@
+[2026-03-21]
+Issue: Delegated coding tasks were too broad and caused unnecessary exploration.
+Correction: Always define the exact files, scope boundary, and expected output before dispatch.
+Apply: Shape the task tightly before invoking the skill.

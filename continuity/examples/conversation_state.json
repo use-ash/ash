@@ -1,0 +1,64 @@
+{
+  "active_threads": [
+    {
+      "id": "thread-memory-framework",
+      "title": "Design memory framework repository",
+      "status": "active",
+      "summary": "The memory framework documents are drafted. The remaining work is to verify examples and confirm the index template is consistent with the schema.",
+      "next_step": "Review the example memory files and confirm all four memory types are represented.",
+      "channels_seen": ["webchat"],
+      "models_seen": ["orchestrator"],
+      "opened_at": "2026-03-21T18:00:00Z",
+      "last_activity": "2026-03-21T19:10:00Z",
+      "closed_at": null,
+      "tags": ["framework", "memory"]
+    },
+    {
+      "id": "thread-guardrails-framework",
+      "title": "Draft guardrails framework repository",
+      "status": "waiting",
+      "summary": "The repository requirements are known, but the detailed audit trail and protected file guides have not been written yet.",
+      "next_step": "Draft the audit trail guide and protected files guide.",
+      "channels_seen": ["webchat"],
+      "models_seen": ["orchestrator"],
+      "opened_at": "2026-03-21T18:20:00Z",
+      "last_activity": "2026-03-21T18:25:00Z",
+      "closed_at": null,
+      "tags": ["framework", "guardrails"]
+    }
+  ],
+  "closed_threads": [
+    {
+      "id": "thread-wiki-concept-review",
+      "title": "Review ASH wiki concepts",
+      "status": "closed",
+      "summary": "The conceptual source material was reviewed and the required framework scope was extracted.",
+      "next_step": "None. Work completed.",
+      "channels_seen": ["webchat"],
+      "models_seen": ["orchestrator"],
+      "opened_at": "2026-03-21T17:30:00Z",
+      "last_activity": "2026-03-21T17:55:00Z",
+      "closed_at": "2026-03-21T17:55:00Z",
+      "tags": ["research", "closed"]
+    }
+  ],
+  "global_context": {
+    "current_priorities": [
+      "Finish drafting all five framework repositories",
+      "Keep every repository self-contained",
+      "Avoid implementation-specific details"
+    ],
+    "known_blockers": [],
+    "important_dates": [
+      "2026-03-21"
+    ],
+    "shared_notes": "All repositories should be written for AI agents to implement in their own workspaces without needing the original private codebase."
+  },
+  "session_metadata": {
+    "last_session_id": "session-2026-03-21-framework-design",
+    "last_updated_by": "orchestrator",
+    "last_updated_at": "2026-03-21T19:10:00Z",
+    "last_channel": "webchat",
+    "last_session_summary": "Reviewed the source wiki, established the framework repo scope, and started drafting the repository contents."
+  }
+}

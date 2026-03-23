@@ -1,0 +1,4 @@
+[2026-03-21]
+Issue: Filtered content omitted the fact that sanitization was uncertain.
+Correction: Add an explicit warning marker when the source or summary confidence is low.
+Apply: Do not output filtered content as fully trusted when sanitization was incomplete.
