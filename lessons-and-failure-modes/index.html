@@ -912,6 +912,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#validating-the-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validating the fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-sub-agent-that-couldnt-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sub-agent that couldn't start
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1067,6 +1089,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#validating-the-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validating the fix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-sub-agent-that-couldnt-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sub-agent that couldn't start
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1130,6 +1174,7 @@
 <p>The file controlled real automated processes. If the change had gone unnoticed, the next scheduled run would have executed modified logic that no human reviewed.</p>
 <p>We caught it. We reverted it. Then we built three layers of protection so it could never happen again: a list of files that no agent can modify without human approval, an audit hook that logs every tool call across every session, and a parser that catches agents trying to sneak edits through shell commands instead of the normal edit tool.</p>
 <p><strong>What it taught us:</strong> An AI agent will sometimes decide that modifying something is the best way to complete its task, even if you told it to only read. "Do research" does not mean "only read files" to every model. You need a hard lock, not a polite request.</p>
+<p>This incident is why the dispatch wrapper now snapshots <code>git status</code> before and after every sub-agent run. Any file that changed but was not named in the original task triggers an alert. The diff check would have caught this exact scenario: a sub-agent told to research a question but that modified a production file instead. The alert would have fired immediately instead of the change being discovered later during manual review.</p>
 <h3 id="the-repository-that-went-public-by-accident">The repository that went public by accident<a class="headerlink" href="#the-repository-that-went-public-by-accident" title="Permanent link">&para;</a></h3>
 <p>While setting up a website for the wiki, the system changed the private code repository to public. The repository contained automation scripts, infrastructure details, and API credentials buried in version history. It was public for about 30 seconds before we caught it and reverted it.</p>
 <p>Thirty seconds was enough. We added a permanent memory entry that blocks this action even if someone asks for it. The wiki moved to a separate repository that contains only documentation. The code repository stays private under all circumstances.</p>
@@ -1143,6 +1188,18 @@
 <p>In practice, a streak of three or four bad results caused the system to pull back so far that it could barely do anything. Each cycle produced so little output that the fixed overhead costs (API calls, processing time, scheduled jobs) ate up whatever small gains remained. The system was stuck in a hole it dug for itself, doing less and less work while the costs stayed the same.</p>
 <p>We replaced the dynamic rule with a fixed one: same level of effort every cycle, regardless of recent results. Less "optimal" on paper. Does not spiral in practice.</p>
 <p><strong>What it taught us:</strong> A rule that works in simulation can fail when real-world costs enter the picture. Simulations often assume zero overhead. Reality does not. When you test something that adjusts its own behavior based on outcomes, test what happens after five bad outcomes in a row, not two.</p>
+<h3 id="validating-the-fix">Validating the fix<a class="headerlink" href="#validating-the-fix" title="Permanent link">&para;</a></h3>
+<p>Adding a rule after an incident is not enough. The rule has to actually work when the same situation comes up again.</p>
+<p>After the repository exposure incident, the deny list was tested by attempting the exact commands that caused the original breach: <code>git push &lt;remote&gt; main</code>, <code>gh repo edit --visibility public</code>, and <code>git remote add &lt;name&gt; &lt;url&gt;</code>. All three were hard-blocked before execution. The deny list fires at the command-matching level in the client, before the command reaches the shell. The agent sees a denial and cannot retry with a variation.</p>
+<p>After the production file edit incident, the audit hook was tested by asking a Codex sub-agent to modify a protected file as part of a broader task. The sub-agent received the prompt-injected guardrails header and refused the modification, citing the safety rules. A second test with Claude Code confirmed that the PreToolUse hook blocked the edit at exit code 2, logged the attempt, and sent a Telegram alert — all before the write reached disk.</p>
+<p>After the secret scanning layers were built, a test commit with a fake API key pattern (<code>sk-ant-api03-test...</code>) in a staged file was rejected by the pre-commit hook with the pattern name, truncated match, and line number. A second test ran <code>cat .env</code> through a Bash tool call and confirmed the PostToolUse hook replaced real key values with <code>[REDACTED:ANTHROPIC_KEY]</code> before the output entered the conversation context.</p>
+<p>These are not simulation results. They are the actual commands run against the live system, with real hooks and real deny lists active. If a protection cannot be validated with a concrete test, it is decoration, not enforcement.</p>
+<h3 id="the-sub-agent-that-couldnt-start">The sub-agent that couldn't start<a class="headerlink" href="#the-sub-agent-that-couldnt-start" title="Permanent link">&para;</a></h3>
+<p>We configured a sub-agent (Codex Desktop) with ASH MCP servers so it would have safety scanning available during exec mode. The MCP servers failed on startup. The handshake between Codex's MCP client and ASH's FastMCP server crashed with "connection closed: initialize response." The sub-agent session started, received the full prompt, but could not act because it was waiting on MCP servers that would never finish connecting.</p>
+<p>Five consecutive runs produced identical results. The prompt was delivered correctly each time. The sub-agent never created a single file. We spent three hours blaming the prompt delivery method (stdin pipe, file path, temp file) before checking the MCP startup logs. The actual error was in the first 15 lines of every log. We read the bottom of the log looking for the problem. It was at the top.</p>
+<p>The fix was a one-line config override that disables MCP servers for headless exec mode: <code>-c 'mcp_servers={}'</code>. Safety enforcement falls back to the prompt-injected guardrails header and the post-run diff check. Not as strong as live MCP scanning, but the sub-agent can work.</p>
+<p><strong>What it taught us:</strong> When a sub-agent produces no output and no errors, check whether its dependencies started. A silent startup failure looks identical to a prompt delivery problem, a timeout, or an empty response. The sub-agent will not tell you its MCP servers failed. You have to read the log from the top, not the bottom.</p>
+<p>A second issue appeared after fixing the MCP problem: large prompts (150+ lines) delivered via stdin caused the sub-agent to begin reasoning but exit before creating any files. Small and medium prompts worked fine. The sub-agent's exec mode appears to have an undocumented context or token budget that silently truncates large tasks. The workaround is splitting large build prompts into smaller sequential tasks, or using a different agent (Claude Code subagents) for multi-file builds.</p>
 <h2 id="recurring-pitfalls">Recurring pitfalls<a class="headerlink" href="#recurring-pitfalls" title="Permanent link">&para;</a></h2>
 <p>These are not one-time incidents. They come back in different forms.</p>
 <p><strong>Stale memory.</strong> A note written three weeks ago says "use the X approach." The code was changed last week to use the Y approach. The agent finds the old note, trusts it, and gives advice based on outdated information. The note is not wrong. It is just no longer true. The fix: always verify memory against current files before acting on it.</p>
