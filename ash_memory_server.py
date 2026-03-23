@@ -46,10 +46,49 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import unicodedata
 from datetime import datetime, timezone
+from pathlib import Path
 from fastmcp import FastMCP
+
+# ---------------------------------------------------------------------------
+# Config loader — reads ~/.ash/config.json or ASH_CONFIG env var
+# ---------------------------------------------------------------------------
+_CFG_DEFAULT = {
+    "audit_log": {
+        "file":   "~/.ash/audit.jsonl",
+        "level":  "all",
+        "stdout": False,
+    },
+}
+
+def _load_config() -> dict:
+    path = os.environ.get("ASH_CONFIG", "~/.ash/config.json")
+    path = Path(path).expanduser()
+    if path.exists():
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return _CFG_DEFAULT
+
+_CFG = _load_config()
+_AUDIT_CFG = _CFG.get("audit_log", _CFG_DEFAULT["audit_log"])
+_LOG_FILE   = Path(_AUDIT_CFG.get("file", "~/.ash/audit.jsonl")).expanduser() \
+              if _AUDIT_CFG.get("level", "all") != "off" else None
+_LOG_LEVEL  = _AUDIT_CFG.get("level", "all")
+_LOG_STDOUT = _AUDIT_CFG.get("stdout", False)
+
+_BLOCK_RESULTS = {"BLOCKED", "QUARANTINED", "REJECTED"}
+
+def _ensure_log_dir() -> None:
+    if _LOG_FILE:
+        _LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+_ensure_log_dir()
 
 # ---------------------------------------------------------------------------
 # Server
@@ -92,12 +131,26 @@ def _now() -> str:
 
 
 def _log(op: str, key: str, result: str, detail: str = "") -> None:
-    entry = {"ts": _now(), "op": op, "key": key, "result": result}
+    entry = {"ts": _now(), "server": "memory", "op": op, "key": key, "result": result}
     if detail:
         entry["detail"] = detail
     _audit.append(entry)
     if len(_audit) > 50:
         _audit.pop(0)
+
+    # File / stdout logging
+    if _LOG_LEVEL == "off":
+        return
+    if _LOG_LEVEL == "blocks_only" and result not in _BLOCK_RESULTS:
+        return
+    if _LOG_FILE:
+        try:
+            with open(_LOG_FILE, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+    if _LOG_STDOUT:
+        print(json.dumps(entry), flush=True)
 
 
 # ---------------------------------------------------------------------------

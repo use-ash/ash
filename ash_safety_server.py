@@ -25,11 +25,52 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 from datetime import datetime
+from pathlib import Path
 from fastmcp import FastMCP
 
 mcp = FastMCP("ASH Safety")
+
+# ---------------------------------------------------------------------------
+# Config loader — reads ~/.ash/config.json or ASH_CONFIG env var
+# ---------------------------------------------------------------------------
+_CFG_DEFAULT = {
+    "audit_log": {
+        "file":   "~/.ash/audit.jsonl",
+        "level":  "all",   # "all" | "blocks_only" | "off"
+        "stdout": False,
+    },
+    "safety_server_port": 8000,
+    "memory_server_port": 8001,
+}
+
+def _load_config() -> dict:
+    path = os.environ.get("ASH_CONFIG", "~/.ash/config.json")
+    path = Path(path).expanduser()
+    if path.exists():
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return _CFG_DEFAULT
+
+_CFG = _load_config()
+_AUDIT_CFG = _CFG.get("audit_log", _CFG_DEFAULT["audit_log"])
+_LOG_FILE   = Path(_AUDIT_CFG.get("file", "~/.ash/audit.jsonl")).expanduser() \
+              if _AUDIT_CFG.get("level", "all") != "off" else None
+_LOG_LEVEL  = _AUDIT_CFG.get("level", "all")   # "all" | "blocks_only" | "off"
+_LOG_STDOUT = _AUDIT_CFG.get("stdout", False)
+
+_BLOCK_RESULTS = {"BLOCK", "FOUND", "INVALID", "REVIEW_REQUIRED"}
+
+def _ensure_log_dir() -> None:
+    if _LOG_FILE:
+        _LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+_ensure_log_dir()
 
 # ---------------------------------------------------------------------------
 # In-memory audit log (500-entry ring buffer)
@@ -42,9 +83,24 @@ def _now() -> str:
 
 
 def _log(tool: str, result: str, details: dict) -> None:
-    _AUDIT_LOG.append({"ts": _now(), "tool": tool, "result": result, **details})
+    entry = {"ts": _now(), "server": "safety", "tool": tool, "result": result, **details}
+    _AUDIT_LOG.append(entry)
     if len(_AUDIT_LOG) > 500:
         _AUDIT_LOG.pop(0)
+
+    # File / stdout logging
+    if _LOG_LEVEL == "off":
+        return
+    if _LOG_LEVEL == "blocks_only" and result not in _BLOCK_RESULTS:
+        return
+    if _LOG_FILE:
+        try:
+            with open(_LOG_FILE, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+    if _LOG_STDOUT:
+        print(json.dumps(entry), flush=True)
 
 
 # ---------------------------------------------------------------------------

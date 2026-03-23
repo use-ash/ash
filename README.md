@@ -80,9 +80,17 @@ Catches two attack classes:
 
 ```bash
 pip install "fastmcp==1.0"
+
+# Optional: interactive setup — configure audit log path, log level, ports
+python3 ash_setup.py
+
+# Start servers
 python3 ash_safety_server.py   # execution safety, port 8000
 python3 ash_memory_server.py   # memory safety,    port 8001
 ```
+
+`ash_setup.py` creates `~/.ash/config.json`. Both servers read this file at startup.
+Skip it to use defaults (log everything to `~/.ash/audit.jsonl`, ports 8000/8001).
 
 Then connect your agent:
 
@@ -115,6 +123,30 @@ ANTHROPIC_API_KEY=<key> python3 examples/demo_runaway_command.py
 ```
 
 Each demo runs the same scenario with ASH **off** then **on**, so you can see exactly what gets blocked and why.
+
+---
+
+## Audit Logging
+
+Both servers write a JSONL audit log. Configure with `ash_setup.py` or by editing `~/.ash/config.json`:
+
+```json
+{
+  "audit_log": {
+    "file": "~/.ash/audit.jsonl",
+    "level": "all",
+    "stdout": false
+  },
+  "safety_server_port": 8000,
+  "memory_server_port": 8001
+}
+```
+
+`level` options: `"all"` (every tool call), `"blocks_only"` (BLOCK/FOUND/QUARANTINED events only), `"off"`.
+
+Set `"stdout": true` to also emit JSON lines to stdout — useful for log aggregators.
+
+Override config path: `ASH_CONFIG=/path/to/config.json python3 ash_safety_server.py`
 
 ---
 
